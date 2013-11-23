@@ -2,8 +2,9 @@ from pprint import pprint
 
 class Site(object):
 	"""
-	A site in the database,
-	including variables present at the site
+	A site (server) in the database,
+	including variables present at the site,
+	a data manager (DM) for the site.
 	"""
 	def __init__(self, number):
 		self.variables = {}

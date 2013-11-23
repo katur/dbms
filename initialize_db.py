@@ -4,7 +4,7 @@ from variable_version import VariableVersion
 def initialize(sitelist):
 	def add_init_var_to_site(var_name, site, i):
 		var = Variable(var_name)
-		vers = VariableVersion(10*i, True)
+		vers = VariableVersion(10*i, -1, None, True)
 		var.versions.append(vers)
 		site.variables[var_name] = var
 	
