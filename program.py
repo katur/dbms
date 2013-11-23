@@ -1,22 +1,27 @@
 import sys
-from db_site import Site
-from initialize_db import initialize
 import config
+from db_site import Site
+from tm import TransactionManager
+from initialize_db import initialize
 
 # create list of 10 sites
-sitelist = [ Site(i) for i in range(1,11) ] 
+sites = [ Site(i) for i in range(1,11) ] 
 
-# initialize the initial db state, as defined in spec
-initialize(sitelist)
+# create a transaction manager
+tm = TransactionManager()
 
-for site in sitelist:
+# according to project spec,
+# initialize the data at the sites
+# along with the tm's directory
+initialize(sites, tm)
+
+for site in sites:
 	site.print_site_state()
-
 
 # accept stdin input stream, line by line
 line = sys.stdin.readline()
 while line:
-	config.clock += 1
 	print "Current time:" + str(config.clock)
 	print line
+	config.clock += 1
 	line = sys.stdin.readline()
