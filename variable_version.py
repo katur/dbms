@@ -2,7 +2,8 @@ class VariableVersion(object):
 	"""
 	A single version of a variable object,
 	including its value, timestamp,
-	author transaction, and whether or not committed.
+	the transaction that wrote it, 
+	and whether or not it's committed.
 	"""
 	def __init__(self, val, ts, wb, comm=False):
 		self.value = val
