@@ -25,5 +25,8 @@ line = sys.stdin.readline()
 while line:
 	config.clock += 1
 	print "Current time:" + str(config.clock)
-	print line
+	instructions = line.split(";")
+	for instruction in instructions:
+		# send instructions to the tm
+		tm.process_instruction(instruction.strip())
 	line = sys.stdin.readline()
