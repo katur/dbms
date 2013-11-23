@@ -18,6 +18,8 @@ initialize(sites, tm)
 for site in sites:
 	site.print_site_state()
 
+tm.print_directory()
+
 # accept stdin input stream, line by line
 line = sys.stdin.readline()
 while line:
