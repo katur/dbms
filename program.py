@@ -1,5 +1,5 @@
 import sys
-from syte import Site
+from db_site import Site
 from initialize_db import initialize
 
 # create list of 10 sites
