@@ -26,39 +26,39 @@ class TransactionManager(object):
 		if args:
 			a = args.group('args')
 		else:
-			print "Warning: ignoring erroneous input with no args"
+			print "Warning: ignoring erroneous instruction (no args)"
 			return
 		
 		# if begin transaction
 		if re.match("^begin\((?P<tname>T\d*)\)", instruction):
 			if a in self.transactions:
-				print "Warning: ignoring input, transaction " + a + " already exists"
+				print "Warning: ignoring input, " + a + " already exists"
 			else:
 				self.transactions[a] = Transaction(False)
-				print "Started transaction " + a + " with start time " + str(self.transactions[a].start_time)
+				print "Started " + a
 		
 		# if begin RO transaction
 		elif re.match("^beginRO\(T\d*\)", instruction):
 			if a in self.transactions:
-				print "Warning: ignoring input, transaction " + a + " already exists"
+				print "Warning: ignoring input, " + a + " already exists"
 			else:
 				self.transactions[p] = Transaction(True)
-				print "Started RO transaction " + a
+				print "Started RO " + a
 		
 		# if end transaction
 		elif re.match("^end\(T\d*\)", instruction):
 			if a not in self.transactions:
-				print "Warning: ignoring input, transaction " + a + " does not exist"
+				print "Warning: ignoring input, " + a + " does not exist"
 			else:
 				t = self.transactions[a]
 				if t.instruction_buffer:
-					print "Cannot commit transaction " + a + " because it has a pending instruction"
+					print "Cannot commit " + a + " due to a pending instruction"
 				for site in t.sites_accessed:
 					if site.activation_time > t.start_time:
-						print "Abort transaction " + a
+						print "Abort " + a
 						break
 
-				print "Commit transaction " + a
+				print "Commit " + a
 		
 		# if fail site
 		elif re.match("^fail\(\d*\)", instruction):
