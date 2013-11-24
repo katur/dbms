@@ -1,9 +1,9 @@
 import sys
-from config import clock, sites, tm
+from globalz import clock, sites, tm
 from initialize_db import initialize
 
 # initialize data in sites, and tm directory
-initialize(sites, tm)
+initialize()
 
 for site in sites:
 	site.print_site_state()

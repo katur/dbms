@@ -1,7 +1,8 @@
 from variable import Variable
 from variable_version import VariableVersion
+from globalz import sites, tm
 
-def initialize(sites, tm):
+def initialize():
 	def add_var_to_site_and_dir(var_name, site, val):
 		var = Variable(var_name)
 		vers = VariableVersion(val, 0, None, True)

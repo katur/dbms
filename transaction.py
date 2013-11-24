@@ -1,12 +1,12 @@
 from pprint import pprint
-import config
+import globalz
 
 class Transaction(object):
 	"""
 	A transaction object
 	"""
 	def __init__(self, ro):
-		self.start_time = config.clock
+		self.start_time = globalz.clock
 		self.is_read_only = ro
 		self.sites_accessed = []
 		self.instruction_buffer = ""
