@@ -8,14 +8,14 @@ def initialize():
 		vers = VariableVersion(val, 0, None, True)
 		var.versions.append(vers)
 		site.variables[var_name] = var
-		tm.directory[var_name].append(site.name)
+		tm.directory[var_name]['sitelist'].append(site.name)
 	
 	# for each variable, x1 through x20
 	for i in range(1,21):
 		var_name = 'x' + str(i)
 
-		# add new var to tm directory as empty list 
-		tm.directory[var_name] = []
+		# add new var to tm directory
+		tm.directory[var_name] = { 'sitelist': [], 'next': 0 }
 
 		if i % 2 == 0: # even
 			for site in sites:
