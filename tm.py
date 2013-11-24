@@ -4,24 +4,37 @@ from transaction import Transaction
 
 class TransactionManager(object):
 	"""
-	A transaction manager object,
-	including directory to look up
-	where a variable is located.
+	A transaction manager object
 	"""
 	def __init__(self):
 		self.directory = {}
 		self.transactions = {}
 
 	def print_directory(self):
-		print "tm directory:"
+		print "tm's variable directory:"
 		pprint(self.directory)
 
 	def print_transactions(self):
-		print "transaction list:"
+		print "tm's transaction directory:"
 		pprint(self.transactions)
 
+	def attempt_pending_instructions(self):
+		"""
+		attempt to execute all pending instructions
+		of active transactions
+		"""
+		ts = self.transactions.values()
+		for t in ts:
+			if t.status is "active" and t.instruction_buffer:
+				i = t.instruction_buffer
+				print "attempting old instruction " + i
+				self.process_instruction(i)
+	
 	def process_instruction(self, instruction):
-		# get the args, i.e. whatever is between parens
+		"""
+		process an input instruction
+		"""
+		# get whatever is between parens
 		args = re.search("\((?P<args>.*)\)", instruction)
 		if args:
 			a = args.group('args')
