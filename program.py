@@ -5,7 +5,7 @@ from tm import TransactionManager
 from initialize_db import initialize
 
 # create list of 10 sites
-sites = [ Site(i) for i in range(1,11) ] 
+sites = [ Site(i,0) for i in range(1,11) ] 
 
 # create the transaction manager
 tm = TransactionManager()

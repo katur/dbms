@@ -7,10 +7,10 @@ class Site(object):
 	including variables present at the site,
 	a data manager (DM) for the site.
 	"""
-	def __init__(self, number):
+	def __init__(self, number, time):
 		self.name = "site" + str(number)
-		active = True
-		site_activation_time = 0
+		self.active = True
+		self.activation_time = time
 		self.variables = {}
 		self.dm = DataManager()
 	
