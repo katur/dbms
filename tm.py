@@ -16,14 +16,31 @@ class TransactionManager(object):
 		pprint(self.directory)
 
 	def process_instruction(self, instruction):
-		if re.match("^begin\(.+\)", instruction):
-			print "start T found"
-		elif re.match("^beginRO\(.+\)", instruction):
-			print "start RO T found"
+		if re.match("^begin\((?P<tname>T\d*)\)", instruction):
+			m = re.match("^begin\((?P<tname>T\d*)\)", instruction)
+			print "start transaction:" + m.group('tname')
+		elif re.match("^beginRO\(T\d*\)", instruction):
+			print "start RO T"
+		elif re.match("^end\(T\d*\)", instruction):
+			print "end T"
+		
+		elif re.match("^fail\(\d*\)", instruction):
+			print "fail site"
+		elif re.match("^recover\(\d*\)", instruction):
+			print "recover site"
+		
+		elif re.match("^dump\(\)", instruction):
+			print "dump all copies all var all sites"
+		elif re.match("^dump\(\d*\)", instruction):
+			print "dump a particular site"
+		elif re.match("^dump\(x\d*\)", instruction):
+			print "dump a particular variable"
+		
 		elif re.match("^R\(.+\,.+\)", instruction):
 			print "Read found"
 		elif re.match("^W\(.+\,.+\,.+\)", instruction):
 			print "Write found"
+		
 		else:
-			print "other found:" + instruction
+			print "erroneous instruction:" + instruction
 		return
