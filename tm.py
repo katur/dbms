@@ -183,12 +183,15 @@ class TransactionManager(object):
 		###########
 		elif re.match("^R\(.+\,.+\)", i):
 			print "Read found: " + a
-			t,var = a.split(',')
-			ro = self.transactions[t].is_read_only
-			site = self.locate_read_site(var)
+			tstr,vid = a.split(',')
+			t = self.transactions[tstr]
+			ro = t.is_read_only
+			site = self.locate_read_site(vid)
 			if site >= 0:
 				site = globalz.sites[site]
 				dm = site.dm
+				val = dm.process_request(t,vid,'r')
+				print "Value " + str(val) + " read from site " + site.name
 				
 		############
 		# IF WRITE #
