@@ -127,10 +127,18 @@ class TransactionManager(object):
 		# IF DUMP #
 		###########
 		elif re.match("^dump\(\)", i):
-			print "dump all copies all var all sites"
+			print "Dump of all copies all var all sites:\n"
+			for site in globalz.sites:
+				print site.name
+				site.print_committed_variables()
 
 		elif re.match("^dump\(\d*\)", i):
-			print "dump site " + a
+			print "Dump of site " + a + ":\n"
+			index = int(a) - 1
+			site = globalz.sites[index]
+			print site.name
+			site.print_committed_variables()
+
 
 		elif re.match("^dump\(x\d*\)", i):
 			print "dump variable " + a

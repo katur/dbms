@@ -17,3 +17,11 @@ class Site(object):
 	def print_site_state(self):
 		print self.name + "; active:" + str(self.active) + "; activation time:" + str(self.activation_time) + "; variables:"
 		pprint(self.variables)
+
+	def print_committed_variables(self):
+		for variable in self.variables.values():
+			print variable.name
+			for version in reversed(variable.versions):
+				if version.committed:
+					print version.value
+					break
