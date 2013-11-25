@@ -17,6 +17,18 @@ class TransactionManager(object):
 	def print_transactions(self):
 		print "tm's transaction directory:"
 		pprint(self.transactions)
+		
+	# locate next active site for variable var_id
+	# returns -1 if no active sites are found
+	def locate_read_site(self, var_id):
+		site_list = directory[var_id]['site_list']
+		site = directory[var_id]['next']
+		for loop in range(len(sites)+1):
+			directory[var_id]['next'] = site		
+			if sites[site].active:
+				return site
+			site = (sites+1) % len(sites)
+		return -1
 
 	def attempt_pending_instructions(self):
 		"""
@@ -55,7 +67,7 @@ class TransactionManager(object):
 			if a in self.transactions:
 				print "Warning: ignoring input, " + a + " already exists"
 			else:
-				self.transactions[p] = Transaction(True)
+				self.transactions[a] = Transaction(True)
 				print "Started RO " + a
 		
 		# if end transaction
@@ -83,6 +95,7 @@ class TransactionManager(object):
 		
 		elif re.match("^dump\(\)", instruction):
 			print "dump all copies all var all sites"
+				
 		elif re.match("^dump\(\d*\)", instruction):
 			print "dump site " + a
 		elif re.match("^dump\(x\d*\)", instruction):
@@ -90,6 +103,15 @@ class TransactionManager(object):
 		
 		elif re.match("^R\(.+\,.+\)", instruction):
 			print "Read found: " + a
+			t,var = a.split(',')
+			ro = self.transactions[t].is_read_only
+			site = self.locate_read_site(var)
+			if site >= 0:
+				site = sites[site]
+				dm = site.dm
+				
+		
+			
 		elif re.match("^W\(.+\,.+\,.+\)", instruction):
 			print "Write found: " + a
 		
