@@ -86,7 +86,6 @@ class TransactionManager(object):
 				print_warning(i, "transaction does not exist")
 			else:
 				t = self.transactions[a]
-<<<<<<< HEAD
 				if t.instruction_buffer:
 					print "Cannot commit " + a + " due to a pending instruction"
 				for site in t.sites_accessed:
@@ -110,7 +109,6 @@ class TransactionManager(object):
 		elif re.match("^dump\(\d*\)", instruction):
 			print "dump site " + a
 		elif re.match("^dump\(x\d*\)", instruction):
-=======
 				if t.status is "committed":
 					print_warning(i, "transaction previously committed")
 				elif t.status is "aborted":
@@ -178,7 +176,6 @@ class TransactionManager(object):
 
 
 		elif re.match("^dump\(x\d*\)", i):
->>>>>>> 4920caa9887ecd028be94778f9627f3273e91112
 			print "dump variable " + a
 
 		###########
@@ -186,7 +183,6 @@ class TransactionManager(object):
 		###########
 		elif re.match("^R\(.+\,.+\)", i):
 			print "Read found: " + a
-<<<<<<< HEAD
 			t,var = a.split(',')
 			ro = self.transactions[t].is_read_only
 			site = self.locate_read_site(var)
@@ -197,13 +193,11 @@ class TransactionManager(object):
 		
 			
 		elif re.match("^W\(.+\,.+\,.+\)", instruction):
-=======
 
 		############
 		# IF WRITE #
 		############
 		elif re.match("^W\(.+\,.+\,.+\)", i):
->>>>>>> 4920caa9887ecd028be94778f9627f3273e91112
 			print "Write found: " + a
 
 		###############################
