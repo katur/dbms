@@ -15,7 +15,7 @@ line = sys.stdin.readline()
 while line:
 	clock += 1 # advance time by 1
 	print "Current time:" + str(clock)
-	
+
 	# re-try all pending instructions
 	tm.attempt_pending_instructions()
 
@@ -25,5 +25,5 @@ while line:
 	# send each instruction to tm
 	for instruction in instructions:
 		tm.process_instruction(instruction.strip())
-	
+
 	line = sys.stdin.readline() # repeat
