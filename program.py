@@ -28,7 +28,7 @@ while line:
 
 	clock += 1 # advance time by 1
 	print "Current time:" + str(clock)
-	
+
 	# re-try all pending instructions
 	tm.attempt_pending_instructions()
 	
@@ -38,8 +38,13 @@ while line:
 	# send each instruction to tm
 	for instruction in instructions:
 		tm.process_instruction(instruction.strip())
+<<<<<<< HEAD
 	
 	line = input.readline() # repeat
 	
 if reading_file:
 	input.close( )
+=======
+
+	line = sys.stdin.readline() # repeat
+>>>>>>> 4920caa9887ecd028be94778f9627f3273e91112
