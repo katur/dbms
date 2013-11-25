@@ -25,13 +25,13 @@ class TransactionManager(object):
 	# locate next active site for variable var_id
 	# returns -1 if no active sites are found
 	def locate_read_site(self, var_id):
-		site_list = directory[var_id]['site_list']
-		site = directory[var_id]['next']
-		for loop in range(len(sites)+1):
-			directory[var_id]['next'] = site		
-			if sites[site].active:
+		site_list = self.directory[var_id]['sitelist']
+		site = self.directory[var_id]['next']
+		for loop in range(len(globalz.sites)+1):
+			self.directory[var_id]['next'] = site		
+			if globalz.sites[site].active:
 				return site
-			site = (sites+1) % len(sites)
+			site = (globalz.sites+1) % len(globalz.sites)
 		return -1
 
 	def attempt_pending_instructions(self):
@@ -96,19 +96,19 @@ class TransactionManager(object):
 				print "Commit " + a
 		
 		# if fail site
-		elif re.match("^fail\(\d*\)", instruction):
+		elif re.match("^fail\(\d*\)", i):
 			print "fail site " + a
 		
 		# if recover site
-		elif re.match("^recover\(\d*\)", instruction):
+		elif re.match("^recover\(\d*\)", i):
 			print "recover site " + a
 		
-		elif re.match("^dump\(\)", instruction):
+		elif re.match("^dump\(\)", i):
 			print "dump all copies all var all sites"
 				
-		elif re.match("^dump\(\d*\)", instruction):
+		elif re.match("^dump\(\d*\)", i):
 			print "dump site " + a
-		elif re.match("^dump\(x\d*\)", instruction):
+		elif re.match("^dump\(x\d*\)", i):
 				if t.status is "committed":
 					print_warning(i, "transaction previously committed")
 				elif t.status is "aborted":
@@ -187,13 +187,9 @@ class TransactionManager(object):
 			ro = self.transactions[t].is_read_only
 			site = self.locate_read_site(var)
 			if site >= 0:
-				site = sites[site]
+				site = globalz.sites[site]
 				dm = site.dm
 				
-		
-			
-		elif re.match("^W\(.+\,.+\,.+\)", instruction):
-
 		############
 		# IF WRITE #
 		############

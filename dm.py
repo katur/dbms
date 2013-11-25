@@ -4,8 +4,8 @@ class DataManager(object):
 	"""
 	Data manager object
 	"""
-	def __init__(self):
+	def __init__(self,site):
 		lm = LockManager()
+		self.site = site
 		
-	def process_message(self, instruction_type):
-		
+	

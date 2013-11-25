@@ -12,7 +12,7 @@ class Site(object):
 		self.active = True # False means failed
 		self.activation_time = time
 		self.variables = {}
-		self.dm = DataManager()
+		self.dm = DataManager(self)
 
 	def print_site_state(self):
 		print self.name + "; active:" + str(self.active) + "; activation time:" + str(self.activation_time) + "; variables:"
