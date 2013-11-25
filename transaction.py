@@ -1,4 +1,3 @@
-from pprint import pprint
 import globalz
 
 class Transaction(object):

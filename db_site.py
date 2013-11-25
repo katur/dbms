@@ -15,5 +15,5 @@ class Site(object):
 		self.dm = DataManager()
 	
 	def print_site_state(self):
-		print self.name + ":"
+		print self.name + "; active:" + str(self.active) + "; activation time:" + str(self.activation_time) + "; variables:"
 		pprint(self.variables)
