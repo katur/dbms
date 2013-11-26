@@ -187,7 +187,8 @@ class TransactionManager(object):
 			t = self.transactions[tstr]
 			ro = t.is_read_only
 			site = self.locate_read_site(vid)
-			if site >= 0:
+			# active site found
+			if site >= 0: 
 				site = globalz.sites[site]
 				dm = site.dm
 				val = dm.process_request(t,vid,'r')
