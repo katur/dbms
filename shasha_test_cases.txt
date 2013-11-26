@@ -1,0 +1,126 @@
+// Test 1.
+// T2 should abort, T1 should not, because of wait-die
+// Younger T2 aborts.
+
+begin(T1)
+begin(T2)
+W(T1,x1,101); W(T2,x2,202)
+W(T1,x2,102); W(T2,x1,201)
+end(T1)
+dump()
+
+// Test 2
+// No aborts happens, since read-only transactions use
+// multiversion read protocol.
+
+begin(T1)
+beginRO(T2)
+W(T1,x1,101); R(T2,x2)
+W(T1,x2,102); R(T2,x1)
+end(T1)
+end(T2)
+dump()
+
+// Test 3
+// T1 should not abort because its site did not fail.
+// In fact all transactions commit
+begin(T1)
+begin(T2)
+R(T1,x3)
+fail(2)
+W(T2,x8,88); R(T2,x3)
+W(T1, x5,91)
+end(T2)
+recover(2)
+end(T1)
+
+// Test 4
+// Now T1 aborts, since site 2 died after T1 accessed it. T2 ok.
+begin(T1)
+begin(T2)
+R(T1,x1)
+fail(2)
+W(T2,x8,88); R(T2,x3)
+R(T1, x5)
+end(T2)
+recover(2)
+end(T1)
+
+// Test 5
+// T1 fails again here because it wrote to a site that failed. T2 ok.
+begin(T1)
+begin(T2)
+W(T1,x6,66)
+fail(2)
+W(T2,x8,88); R(T2,x3)
+R(T1, x5)
+end(T2)
+recover(2)
+end(T1)
+
+
+// Test 6
+// T1 ok. T2 ok. T2 reads from a recovering site, but odd variables only
+// at that site
+begin(T1)
+begin(T2)
+fail(3); fail(4)
+R(T1,x1)
+W(T2,x8,88)
+end(T1)
+recover(4); recover(3)
+R(T2,x3)
+end(T2)
+
+
+
+// Test 7
+// T2 should read the initial version of x3 based on multiversion read
+// consistency.
+begin(T1)
+beginRO(T2)
+R(T2,x1)
+R(T2,x2)
+W(T1,x3,33)
+end(T1)
+R(T2,x3)
+end(T2)
+
+// Test 8
+// T2 still reads the initial value of x3
+// T3 still reads the value of x3 written by T1
+begin(T1)
+beginRO(T2)
+R(T2,x1)
+R(T2,x2)
+W(T1,x3,33)
+end(T1)
+beginR0(T3)
+R(T3,x3)
+R(T2,x3)
+end(T2)
+
+// Test 9
+// T1, T2, T3 ok. T3 should wait because older
+begin(T3)
+begin(T1)
+begin(T2)
+W(T3,x2,22)
+W(T2,x4,44)
+R(T3,x4)
+end(T2)
+end(T3)
+R(T1,x2)
+end(T1)
+
+// Test 10
+// T3 should not wait and should abort
+begin(T1)
+begin(T2)
+begin(T3)
+W(T3,x2,22)
+W(T2,x4,44)
+R(T3,x4)
+end(T2)
+R(T1,x2)
+end(T1)
