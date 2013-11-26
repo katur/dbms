@@ -86,29 +86,6 @@ class TransactionManager(object):
 				print_warning(i, "transaction does not exist")
 			else:
 				t = self.transactions[a]
-				if t.instruction_buffer:
-					print "Cannot commit " + a + " due to a pending instruction"
-				for site in t.sites_accessed:
-					if site.activation_time > t.start_time:
-						print "Abort " + a
-						break
-
-				print "Commit " + a
-		
-		# if fail site
-		elif re.match("^fail\(\d*\)", i):
-			print "fail site " + a
-		
-		# if recover site
-		elif re.match("^recover\(\d*\)", i):
-			print "recover site " + a
-		
-		elif re.match("^dump\(\)", i):
-			print "dump all copies all var all sites"
-				
-		elif re.match("^dump\(\d*\)", i):
-			print "dump site " + a
-		elif re.match("^dump\(x\d*\)", i):
 				if t.status is "committed":
 					print_warning(i, "transaction previously committed")
 				elif t.status is "aborted":
