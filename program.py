@@ -11,8 +11,15 @@ for site in sites:
 
 tm.print_directory()	
 	
+reading_file = False	
+if len(sys.argv) > 1:
+	input = open(sys.argv[1],'r')
+	reading_file = True
+else:
+	input = sys.stdin	
+	
 # accept stdin input stream, line by line
-line = sys.stdin.readline()
+line = input.readline()
 
 while line:
 	print line
@@ -32,5 +39,7 @@ while line:
 	for instruction in instructions:
 		tm.process_instruction(instruction.strip())
 	
-	line = sys.stdin.readline() # repeat
+	line = input.readline() # repeat
 	
+if reading_file:
+	input.close( )

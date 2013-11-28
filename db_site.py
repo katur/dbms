@@ -5,14 +5,16 @@ class Site(object):
 	"""
 	A site (server) in the database,
 	including variables present at the site,
-	a data manager (DM) for the site.
+	a data manager (DM), and a transaction manager
+	(TM) for the site.
 	"""
-	def __init__(self, number, time):
+	def __init__(self, number, time, tm):
 		self.name = "site" + str(number)
 		self.active = True # False means failed
 		self.activation_time = time
 		self.variables = {}
 		self.dm = DataManager(self)
+		self.tm = tm
 
 	def print_site_state(self):
 		print self.name + "; active:" + str(self.active) + "; activation time:" + str(self.activation_time) + "; variables:"
