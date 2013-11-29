@@ -116,7 +116,6 @@ class TransactionManager(object):
 					print_warning(i, "transaction previously aborted")
 				elif t.instruction_buffer:
 					print_warning(i, "can't commit due to a buffered instruction")
-					#t.instruction_buffer = i
 				else:
 					# make sure all sites have been up
 					for site in t.sites_accessed:

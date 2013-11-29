@@ -54,7 +54,3 @@ class DataManager(object):
 		#############		
 		elif r_type == 'a':
 			self.lm.release_locks(transaction)				
-						
-		
-				
-			
