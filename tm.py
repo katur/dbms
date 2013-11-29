@@ -47,13 +47,13 @@ class TransactionManager(object):
 		num_pending = 0
 		ts = self.transactions.values()
 		for t in ts:
-			if t.status is "active" and len(t.instruction_buffer) > 0:
+			if t.status is "active" and t.instruction_buffer:
 				num_pending += 1
-				i = t.instruction_buffer[0]
+				i = t.instruction_buffer
 				print "attempting old instruction " + i
 				result = self.process_instruction(i)
 				if result == globalz.Flag.Success:
-					t.instruction_buffer = t.instruction_buffer[1:]
+					t.instruction_buffer = ""
 					num_pending -= 1
 		return num_pending > 0
 
@@ -104,7 +104,7 @@ class TransactionManager(object):
 					print_warning(i, "transaction previously aborted")
 				elif t.instruction_buffer:
 					#print_warning(i, "can't commit due to a buffered instruction")
-					t.instruction_buffer.append(i)	
+					t.instruction_buffer = i	
 				else:
 					# make sure all sites have been up
 					for site in t.sites_accessed:
@@ -116,7 +116,7 @@ class TransactionManager(object):
 
 					# if all sites have been up, commit
 					t.status = "committed"
-					for site in t.sites_accessed:
+					#for site in t.sites_accessed:
 						
 					
 					print "Committed " + a
@@ -209,7 +209,7 @@ class TransactionManager(object):
 				else:
 					num_active -= 1					
 			if num_active == 0 or must_wait:
-				t.instruction_buffer.append(i)
+				t.instruction_buffer = i
 			else:
 				return globalz.Flag.Success
 			

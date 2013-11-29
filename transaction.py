@@ -10,7 +10,7 @@ class Transaction(object):
 		self.start_time = globalz.clock
 		self.is_read_only = ro
 		self.sites_accessed = []
-		self.instruction_buffer = []
+		self.instruction_buffer = ""
 
 	def __repr__(self):
 		return self.id
