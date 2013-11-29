@@ -18,10 +18,10 @@ def initialize():
 		# add new var to tm directory
 		tm.directory[var_name] = { 'sitelist': [], 'next': 0 }
 
-		if i % 2 == 0: # even
+		if i % 2 == 0: # if even, at all sites
 			for site in sites:
 				add_var_to_site_and_dir(var_name, site, i*10)
 		
-		else: # odd
+		else: # if odd, at one particular site
 			site = sites[((1+i) % 10) - 1]
 			add_var_to_site_and_dir(var_name, site, i*10)

@@ -22,9 +22,11 @@ class TransactionManager(object):
 		print "tm's transaction directory:"
 		pprint(self.transactions)
 		
-	# locate next active site for variable var_id
-	# returns None if no active sites are found
 	def locate_read_site(self, var_id):
+		"""
+		locate next active site for variable var_id.
+		returns None if no active sites are found.
+		"""
 		site_list = self.directory[var_id]['sitelist']
 		index = self.directory[var_id]['next']
 		site = site_list[index]	
