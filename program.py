@@ -33,4 +33,3 @@ while line:
 		tm.process_instruction(instruction.strip())
 	
 	line = sys.stdin.readline() # repeat
-	
