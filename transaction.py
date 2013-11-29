@@ -14,3 +14,6 @@ class Transaction(object):
 
 	def __repr__(self):
 		return self.id
+		
+	def __str__(self):
+		return self.id + '| status:' + self.status

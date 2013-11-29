@@ -14,9 +14,11 @@ globalz.tm.print_directory()
 	
 # accept stdin input stream, line by line
 line = sys.stdin.readline()
+instructions_remaining = False
 
-while line:
-	print 'Reading: ' + line.strip()
+while line or instructions_remaining:
+	if line:
+		print 'Reading: ' + line.strip()
 	if re.match("eof",line):
 		break
 
@@ -24,7 +26,7 @@ while line:
 	print "Current time:" + str(globalz.clock)
 
 	# re-try all pending instructions
-	globalz.tm.attempt_pending_instructions()
+	instructions_remaining = globalz.tm.attempt_pending_instructions()
 	
 	# parse new instruction(s) from input line
 	instructions = line.split(";")
@@ -33,9 +35,5 @@ while line:
 	for instruction in instructions:
 		globalz.tm.process_instruction(instruction.strip())
 	
-	line = sys.stdin.readline() # repeat
-
-globalz.clock += 1 # advance time by 1
-while globalz.tm.attempt_pending_instructions():
-	print "Current time:" + str(globalz.clock)
-	globalz.clock += 1 # advance time by 1
+	if line:
+		line = sys.stdin.readline() # repeat

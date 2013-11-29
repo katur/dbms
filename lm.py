@@ -9,13 +9,20 @@ class LockManager(object):
 		else 'r' for shared lock
 		else 'n'
 	}					
-	lock_table[var][t] = list of all transactions 
+	lock_table[var][ts] = list of all transactions 
 					     holding locks on var
 	
 	"""
 	def __init__(self):
 		self.lock_table = {}
 		self.transaction_locks = {}	
+		
+	def release_locks(self,transaction):
+		for vid in self.transaction_locks[transaction]:
+			entry = self.lock_table[vid]
+			entry['ts'].remove(transaction)
+			if len(entry['ts']) == 0:
+				entry['lock'] = 'n'
 		
 	def request_lock(self,transaction,vid,r_type):
 		lock = self.lock_table[vid]['lock']

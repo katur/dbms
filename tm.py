@@ -22,6 +22,11 @@ class TransactionManager(object):
 		print "tm's transaction directory:"
 		pprint(self.transactions)
 		
+	def abort_transaction(self,transaction):
+		t.status = "aborted"
+		for site in t.sites_accessed:
+			site.dm.process_request(t,None,'a',None)	
+		
 	# locate next active site for variable var_id
 	# returns None if no active sites are found
 	def locate_read_site(self, var_id):
@@ -36,6 +41,10 @@ class TransactionManager(object):
 			site = site_list[index]
 		return None
 
+	def abort_transaction(self,t):
+		for site in t.sites_accessed:
+			site.dm.process_request(t,None,'a',None)
+
 	def attempt_pending_instructions(self):
 		"""
 		attempt to execute all pending instructions
@@ -44,18 +53,19 @@ class TransactionManager(object):
 		returns True if some instructions remain pending after 
 		execution
 		"""
-		num_pending = 0
+		instructions_remaining = False
 		ts = self.transactions.values()
 		for t in ts:
 			if t.status is "active" and t.instruction_buffer:
-				num_pending += 1
 				i = t.instruction_buffer
 				print "attempting old instruction " + i
 				result = self.process_instruction(i)
+				print 'result = ' + str(result)
 				if result == globalz.Flag.Success:
 					t.instruction_buffer = ""
-					num_pending -= 1
-		return num_pending > 0
+				elif result == globalz.Flag.Wait:
+					instructions_remaining = True
+		return instructions_remaining
 
 	def process_instruction(self, i):
 		"""
@@ -97,29 +107,30 @@ class TransactionManager(object):
 			if a not in self.transactions:
 				print_warning(i, "transaction does not exist")
 			else:
+				print 'Commit request found: ' + a
 				t = self.transactions[a]
 				if t.status is "committed":
 					print_warning(i, "transaction previously committed")
 				elif t.status is "aborted":
 					print_warning(i, "transaction previously aborted")
 				elif t.instruction_buffer:
-					#print_warning(i, "can't commit due to a buffered instruction")
-					t.instruction_buffer = i	
+					print_warning(i, "can't commit due to a buffered instruction")
+					#t.instruction_buffer = i
 				else:
 					# make sure all sites have been up
 					for site in t.sites_accessed:
 						# if some site hasn't been up, abort
 						if site.activation_time > t.start_time:
-							t.status = "aborted"
-							print "Aborted " + a
+							self.abort_transaction(t)
 							return
 
 					# if all sites have been up, commit
 					t.status = "committed"
-					#for site in t.sites_accessed:
-						
+					for site in t.sites_accessed:
+						site.dm.process_request(t,None,'c',None)						
 					
 					print "Committed " + a
+					return globalz.Flag.Success
 
 		################
 		# IF FAIL SITE #
@@ -184,9 +195,19 @@ class TransactionManager(object):
 			if site: 
 				dm = site.dm
 				flag,val = dm.process_request(t,vid,'r',None)
-				t.sites_accessed.append(site)
-				print "Value " + str(val) + " read from site " + site.name
+				if flag == globalz.Flag.Success:
+					if not site in t.sites_accessed:				
+						t.sites_accessed.append(site)
+					print "Value " + str(val) + " read from site " + site.name
+				elif flag == globalz.Flag.Wait:
+					print 'Instruction pending'
+					t.instruction_buffer = i
+				else:
+					self.abort_transaction(t)
 				return flag
+			else:
+				print "No active site found for read"
+				t.instruction_buffer = i
 				
 		############
 		# IF WRITE #
@@ -205,7 +226,7 @@ class TransactionManager(object):
 					if flag == globalz.Flag.Wait:
 						must_wait = True
 					elif flag == globalz.Flag.Abort:
-						print 'must abort transaction'
+						self.abort_transaction(t)
 				else:
 					num_active -= 1					
 			if num_active == 0 or must_wait:
