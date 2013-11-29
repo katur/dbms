@@ -27,7 +27,6 @@ class DataManager(object):
 		elif r_type == 'r' or r_type == 'w':
 			request_result = self.lm.request_lock(transaction,vid,r_type)
 			if request_result == globalz.Flag.Success:
-				transaction.sites_accessed.append(self.site)
 				version_list = self.site.variables[vid].versions
 				if r_type == 'w':
 					version = VariableVersion(val,globalz.clock,transaction,False)
@@ -41,8 +40,21 @@ class DataManager(object):
 		#############
 		# IF COMMIT #
 		#############
+		elif r_type == 'c':
+			variables_accessed = self.lm.transaction_locks[transaction]
+			for vid in variables_accessed:
+				var = self.site.variables[vid]
+				latest_version = var.versions[0]
+				latest_version.timestamp = globalz.clock
+				latest_version.committed = True
+			self.lm.release_locks(transaction)
 		
+		#############
+		# IF ABORT #
+		#############		
+		elif r_type == 'a':
+			self.lm.release_locks(transaction)				
+						
 		
-				
 				
 			
