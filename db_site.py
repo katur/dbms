@@ -8,10 +8,10 @@ class Site(object):
 	a data manager (DM), and a transaction manager
 	(TM) for the site.
 	"""
-	def __init__(self, number, time, tm):
+	def __init__(self, number, tm):
 		self.name = "site" + str(number)
 		self.active = True # False means failed
-		self.activation_time = time
+		self.activation_time = 0
 		self.variables = {}
 		self.dm = DataManager(self)
 		self.tm = tm
