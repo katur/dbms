@@ -9,12 +9,10 @@ initialize()
 for site in sites:
 	site.print_site_state()
 
-tm.print_directory()	
-	
-input = sys.stdin	
+tm.print_directory()		
 	
 # accept stdin input stream, line by line
-line = input.readline()
+line = sys.stdin.readline()
 
 while line:
 	print line
@@ -34,4 +32,4 @@ while line:
 	for instruction in instructions:
 		tm.process_instruction(instruction.strip())
 	
-	line = input.readline() # repeat
+	line = sys.stdin.readline() # repeat
