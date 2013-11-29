@@ -22,12 +22,13 @@ class LockManager(object):
 		# no lock on variable
 		if lock == 'n':
 			self.lock_table[vid]['lock'] = r_type
+			self.lock_table[vid]['ts'] = [transaction]
 			if not transaction in self.transaction_locks:
 				self.transaction_locks[transaction] = []
 			self.transaction_locks[transaction].append(vid)
 			return globalz.Flag.Success
 		else:
-			lockers = self.lock_table[vid]['t']
+			lockers = self.lock_table[vid]['ts']
 			# lock held by older transaction
 			if lockers[0].start_time < transaction.start_time:
 				return globalz.Flag.Abort

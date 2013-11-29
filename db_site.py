@@ -23,7 +23,7 @@ class Site(object):
 	def print_committed_variables(self):
 		for variable in self.variables.values():
 			print variable.name
-			for version in reversed(variable.versions):
+			for version in variable.versions:
 				if version.committed:
 					print version.value
 					break

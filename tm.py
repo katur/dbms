@@ -34,17 +34,6 @@ class TransactionManager(object):
 				return site
 			site = site_list[index]
 		return None
-						
-		"""
-		site_list = self.directory[var_id]['sitelist']
-		sitenum = self.directory[var_id]['next']
-		for loop in range(len(site_list)+1):
-			self.directory[var_id]['next'] = sitenum
-			if site_list[site].active:
-				return site
-			site = (site+1) % len(globalz.sites)
-		return -1
-		"""
 
 	def attempt_pending_instructions(self):
 		"""

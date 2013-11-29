@@ -22,7 +22,7 @@ else:
 line = input.readline()
 
 while line:
-	print line
+	print 'Reading: ' + line.strip()
 	if re.match("eof",line):
 		break
 
