@@ -23,16 +23,28 @@ class TransactionManager(object):
 		pprint(self.transactions)
 		
 	# locate next active site for variable var_id
-	# returns -1 if no active sites are found
+	# returns None if no active sites are found
 	def locate_read_site(self, var_id):
 		site_list = self.directory[var_id]['sitelist']
-		site = self.directory[var_id]['next']
-		for loop in range(len(globalz.sites)+1):
-			self.directory[var_id]['next'] = site		
-			if globalz.sites[site].active:
+		index = self.directory[var_id]['next']
+		site = site_list[index]	
+		for loop in range(len(site_list)+1):
+			self.directory[var_id]['next'] = (index+1) % len(site_list)
+			if site.active:
 				return site
-			site = (globalz.sites+1) % len(globalz.sites)
+			site = site_list[index]
+		return None
+						
+		"""
+		site_list = self.directory[var_id]['sitelist']
+		sitenum = self.directory[var_id]['next']
+		for loop in range(len(site_list)+1):
+			self.directory[var_id]['next'] = sitenum
+			if site_list[site].active:
+				return site
+			site = (site+1) % len(globalz.sites)
 		return -1
+		"""
 
 	def attempt_pending_instructions(self):
 		"""
@@ -50,6 +62,7 @@ class TransactionManager(object):
 		"""
 		process an input instruction
 		"""
+		
 		# get whatever is between parens
 		args = re.search("\((?P<args>.*)\)", i)
 		if args:
@@ -165,17 +178,20 @@ class TransactionManager(object):
 			ro = t.is_read_only
 			site = self.locate_read_site(vid)
 			# active site found
-			if site >= 0: 
-				site = globalz.sites[site]
+			if site: 
 				dm = site.dm
-				val = dm.process_request(t,vid,'r')
+				val = dm.process_request(t,vid,'r',None)
+				t.sites_accessed.append(site)
 				print "Value " + str(val) + " read from site " + site.name
 				
 		############
 		# IF WRITE #
 		############
 		elif re.match("^W\(.+\,.+\,.+\)", i):
-			print "Write found: " + a
+			print "Write found: " + a		
+			tstr,vid,val = a.split(',')				
+			t = self.transactions[tstr]			
+			
 
 		###############################
 		# IF NOT AN INSTRUCTION ABOVE #

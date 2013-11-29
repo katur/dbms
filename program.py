@@ -11,8 +11,10 @@ for site in sites:
 
 tm.print_directory()	
 	
+input = sys.stdin	
+	
 # accept stdin input stream, line by line
-line = sys.stdin.readline()
+line = input.readline()
 
 while line:
 	print line
@@ -32,4 +34,4 @@ while line:
 	for instruction in instructions:
 		tm.process_instruction(instruction.strip())
 	
-	line = sys.stdin.readline() # repeat
+	line = input.readline() # repeat
