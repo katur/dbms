@@ -29,7 +29,8 @@ class TransactionManager(object):
 		index = self.directory[var_id]['next']
 		site = site_list[index]	
 		for loop in range(len(site_list)+1):
-			self.directory[var_id]['next'] = (index+1) % len(site_list)
+			index = (index+1) % len(site_list)		
+			self.directory[var_id]['next'] = index
 			if site.active:
 				return site
 			site = site_list[index]
@@ -115,6 +116,9 @@ class TransactionManager(object):
 
 					# if all sites have been up, commit
 					t.status = "committed"
+					for site in t.sites_accessed:
+						
+					
 					print "Committed " + a
 
 		################

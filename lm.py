@@ -15,7 +15,7 @@ class LockManager(object):
 	"""
 	def __init__(self):
 		self.lock_table = {}
-		self.transaction_locks = {}
+		self.transaction_locks = {}	
 		
 	def request_lock(self,transaction,vid,r_type):
 		lock = self.lock_table[vid]['lock']
