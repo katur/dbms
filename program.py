@@ -9,17 +9,10 @@ initialize()
 for site in sites:
 	site.print_site_state()
 
-tm.print_directory()	
-	
-reading_file = False	
-if len(sys.argv) > 1:
-	input = open(sys.argv[1],'r')
-	reading_file = True
-else:
-	input = sys.stdin	
+tm.print_directory()		
 	
 # accept stdin input stream, line by line
-line = input.readline()
+line = sys.stdin.readline()
 
 while line:
 	print 'Reading: ' + line.strip()
@@ -39,7 +32,4 @@ while line:
 	for instruction in instructions:
 		tm.process_instruction(instruction.strip())
 	
-	line = input.readline() # repeat
-	
-if reading_file:
-	input.close( )
+	line = sys.stdin.readline() # repeat
