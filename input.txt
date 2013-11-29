@@ -1,4 +1,6 @@
 begin(T1)
-R(T1,x2)
-R(T1,x2)
+begin(T2)
+R(T2,x2)
+W(T1,x2,101)
 end(T1)
+end(T2)

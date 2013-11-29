@@ -16,6 +16,9 @@ class Site(object):
 		self.dm = DataManager(self)
 		self.tm = tm
 
+	def __repr__(self):
+		return self.name
+
 	def print_site_state(self):
 		print self.name + "; active:" + str(self.active) + "; activation time:" + str(self.activation_time) + "; variables:"
 		pprint(self.variables)

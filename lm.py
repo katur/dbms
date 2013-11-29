@@ -44,7 +44,7 @@ class LockManager(object):
 				# transaction holding a read lock
 				else:
 					i = 0
-					while lockers[i].start_time > transaction.start_time:
+					while lockers[i].start_time < transaction.start_time:
 						i += 1
 					lockers.insert(i,transaction)
 					if not transaction in self.transaction_locks:

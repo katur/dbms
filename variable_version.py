@@ -12,7 +12,11 @@ class VariableVersion(object):
 		self.committed = comm
 
 	def __repr__(self):
-		return str(self.value) + ", time:" + str(self.timestamp) + ", transaction:" + str(self.written_by) + ", committed:" + str(self.committed)
+		return '{' + str(self.value) + ", time:" + str(self.timestamp) + \
+		", transaction:" + str(self.written_by) + \
+		", committed:" + str(self.committed) + '}'
 
 	def __str__(self):
-		return str(self.value) + ", time:" + str(self.timestamp) + ", transaction:" + str(self.written_by) + ", committed:" + str(self.committed)
+		return '{' + str(self.value) + ", time:" + str(self.timestamp) + \
+		", transaction:" + str(self.written_by) + \
+		", committed:" + str(self.committed) + '}'

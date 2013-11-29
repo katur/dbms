@@ -39,13 +39,22 @@ class TransactionManager(object):
 		"""
 		attempt to execute all pending instructions
 		of active transactions
+		
+		returns True if some instructions remain pending after 
+		execution
 		"""
+		num_pending = 0
 		ts = self.transactions.values()
 		for t in ts:
-			if t.status is "active" and t.instruction_buffer:
-				i = t.instruction_buffer
+			if t.status is "active" and len(t.instruction_buffer) > 0:
+				num_pending += 1
+				i = t.instruction_buffer[0]
 				print "attempting old instruction " + i
-				self.process_instruction(i)
+				result = self.process_instruction(i)
+				if result == globalz.Flag.Success:
+					t.instruction_buffer = t.instruction_buffer[1:]
+					num_pending -= 1
+		return num_pending > 0
 
 	def process_instruction(self, i):
 		"""
@@ -67,7 +76,7 @@ class TransactionManager(object):
 			if a in self.transactions:
 				print_warning(i, "transaction already exists")
 			else:
-				self.transactions[a] = Transaction(False)
+				self.transactions[a] = Transaction(a,False)
 				print "Started " + a
 
 		########################
@@ -77,7 +86,7 @@ class TransactionManager(object):
 			if a in self.transactions:
 				print_warning(i, "transaction already exists")
 			else:
-				self.transactions[a] = Transaction(True)
+				self.transactions[a] = Transaction(a,True)
 				print "Started RO " + a
 
 		###################
@@ -93,7 +102,8 @@ class TransactionManager(object):
 				elif t.status is "aborted":
 					print_warning(i, "transaction previously aborted")
 				elif t.instruction_buffer:
-						print_warning(i, "can't commit due to a buffered instruction")
+					#print_warning(i, "can't commit due to a buffered instruction")
+					t.instruction_buffer.append(i)	
 				else:
 					# make sure all sites have been up
 					for site in t.sites_accessed:
@@ -169,17 +179,35 @@ class TransactionManager(object):
 			# active site found
 			if site: 
 				dm = site.dm
-				val = dm.process_request(t,vid,'r',None)
+				flag,val = dm.process_request(t,vid,'r',None)
 				t.sites_accessed.append(site)
 				print "Value " + str(val) + " read from site " + site.name
+				return flag
 				
 		############
 		# IF WRITE #
 		############
 		elif re.match("^W\(.+\,.+\,.+\)", i):
-			print "Write found: " + a		
+			print "Write found: " + a	
 			tstr,vid,val = a.split(',')				
 			t = self.transactions[tstr]			
+			site_list = self.directory[vid]['sitelist']
+			num_active = len(site_list)
+			must_wait = False
+			for site in site_list:
+				if site.active:
+					dm = site.dm
+					flag,trash = dm.process_request(t,vid,'w',val)
+					if flag == globalz.Flag.Wait:
+						must_wait = True
+					elif flag == globalz.Flag.Abort:
+						print 'must abort transaction'
+				else:
+					num_active -= 1					
+			if num_active == 0 or must_wait:
+				t.instruction_buffer.append(i)
+			else:
+				return globalz.Flag.Success
 			
 
 		###############################

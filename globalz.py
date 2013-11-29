@@ -1,6 +1,7 @@
 from db_site import Site
 from tm import TransactionManager
 
+# gives the result of a lock request 
 class Flag:
 	Abort, Wait, Success = range(3)	
 
