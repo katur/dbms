@@ -18,4 +18,4 @@ clock = 0
 tm = TransactionManager()
 
 # list of 10 sites 
-sites = [ Site(i,0,tm) for i in site_range ] 
+sites = [ Site(i,tm) for i in site_range ] 
