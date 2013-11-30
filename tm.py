@@ -22,10 +22,11 @@ class TransactionManager(object):
 		print "tm's transaction directory:"
 		pprint(self.transactions)
 		
-	def abort_transaction(self,transaction):
+	def abort_transaction(self,t):
+		print "Aborting transaction " + t.id
 		t.status = "aborted"
 		for site in t.sites_accessed:
-			site.dm.process_request(t,None,'a',None)	
+			site.dm.process_abort(t)	
 		
 	def locate_read_site(self, var_id):
 		"""
@@ -42,10 +43,6 @@ class TransactionManager(object):
 				return site
 			site = site_list[index]
 		return None
-
-	def abort_transaction(self,t):
-		for site in t.sites_accessed:
-			site.dm.process_request(t,None,'a',None)
 
 	def attempt_pending_instructions(self):
 		"""
@@ -71,7 +68,7 @@ class TransactionManager(object):
 
 	def process_instruction(self, i):
 		"""
-		process an input instruction
+		Process an input instruction
 		"""	
 		# get whatever is between parens
 		args = re.search("\((?P<args>.*)\)", i)
@@ -127,7 +124,7 @@ class TransactionManager(object):
 					# if all sites have been up, commit
 					t.status = "committed"
 					for site in t.sites_accessed:
-						site.dm.process_request(t,None,'c',None)						
+						site.dm.process_commit(t)	
 					
 					print "Committed " + a
 					return globalz.Flag.Success
@@ -178,7 +175,6 @@ class TransactionManager(object):
 			print site.name
 			site.print_committed_variables()
 
-
 		elif re.match("^dump\(x\d*\)", i):
 			print "dump variable " + a
 
@@ -186,43 +182,45 @@ class TransactionManager(object):
 		# IF READ #
 		###########
 		elif re.match("^R\(.+\,.+\)", i):
-			print "Read found: " + a
-			tstr,vid = a.split(',')
-			t = self.transactions[tstr]
-			ro = t.is_read_only
+			tid,vid = a.split(',')
+			t = self.transactions[tid]
 			site = self.locate_read_site(vid)
-			# active site found
-			if site: 
-				dm = site.dm
-				flag,val = dm.process_request(t,vid,'r',None)
-				if flag == globalz.Flag.Success:
-					if not site in t.sites_accessed:				
-						t.sites_accessed.append(site)
-					print "Value " + str(val) + " read from site " + site.name
-				elif flag == globalz.Flag.Wait:
-					print 'Instruction pending'
-					t.instruction_buffer = i
-				else:
-					self.abort_transaction(t)
-				return flag
-			else:
+			
+			if not site: # if no active site was found
 				print "No active site found for read"
 				t.instruction_buffer = i
+
+			else: # if active site found
+				if t.is_read_only:
+					val = site.dm.process_ro_read(t,vid)
+					print str(val) + " read from " + site.name
+				
+				else: # t is a read/write transaction
+					flag,val = site.dm.process_rw_read(t,vid)
+				
+					if flag == globalz.Flag.Success:
+						if not site in t.sites_accessed:				
+							t.sites_accessed.append(site)
+						print str(val) + " read from " + site.name
+					elif flag == globalz.Flag.Wait:
+						print "Instruction pending"
+						t.instruction_buffer = i
+					else: # flag == globalz.Flag.Abort
+						self.abort_transaction(t)
+				return flag
 				
 		############
 		# IF WRITE #
 		############
 		elif re.match("^W\(.+\,.+\,.+\)", i):
-			print "Write found: " + a	
-			tstr,vid,val = a.split(',')				
-			t = self.transactions[tstr]			
+			tid,vid,val = a.split(',')				
+			t = self.transactions[tid]			
 			site_list = self.directory[vid]['sitelist']
 			num_active = len(site_list)
 			must_wait = False
 			for site in site_list:
 				if site.active:
-					dm = site.dm
-					flag,trash = dm.process_request(t,vid,'w',val)
+					flag = site.dm.process_write(t,vid,val)
 					if flag == globalz.Flag.Wait:
 						must_wait = True
 					elif flag == globalz.Flag.Abort:

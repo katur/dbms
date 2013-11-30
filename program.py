@@ -16,13 +16,14 @@ instructions_remaining = False
 
 while line or instructions_remaining:
 	globalz.clock += 1 # advance time by 1
-	print "Current time:" + str(globalz.clock)
+	
+	# print "Current time:" + str(globalz.clock)
 	
 	# re-try all pending instructions
 	instructions_remaining = globalz.tm.attempt_pending_instructions()
 	
 	if line:
-		print 'Reading: ' + line.strip()
+		print 'Input: ' + line.strip()
 
 		# parse new instruction(s) from input line
 		instructions = line.split(";")
