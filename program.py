@@ -15,15 +15,17 @@ initialize()
 line = sys.stdin.readline()
 
 while line:
-	globalz.clock += 1 # advance time by 1
+	if re.match("^\/\/", line): # if comment
+		print "skipping comment"
 	
-	# print "Current time:" + str(globalz.clock)
+	else:
+		globalz.clock += 1 # advance time by 1
+		print "Current time:" + str(globalz.clock)
 	
-	# re-try all pending instructions
-	globalz.tm.attempt_pending_instructions()
+		# re-try all pending instructions
+		globalz.tm.attempt_pending_instructions()
 	
-	if line:
-		print 'Input: ' + line.strip()
+		print 'Input Line: ' + line.strip()
 
 		# parse new instruction(s) from input line
 		instructions = line.split(";")
@@ -32,7 +34,7 @@ while line:
 		for instruction in instructions:
 			globalz.tm.process_instruction(instruction.strip())
 	
-		line = sys.stdin.readline() # repeat
+	line = sys.stdin.readline() # repeat
 
 # in case there are still pending instructions
 # continue incrementing clock and attempting them
