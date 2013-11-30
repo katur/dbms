@@ -48,23 +48,18 @@ class TransactionManager(object):
 		"""
 		attempt to execute all pending instructions
 		of active transactions
-		
-		returns True if some instructions remain pending after 
-		execution
 		"""
-		instructions_remaining = False
 		ts = self.transactions.values()
 		for t in ts:
 			if t.status is "active" and t.instruction_buffer:
 				i = t.instruction_buffer
-				print "attempting old instruction " + i
+				print "attempting buffered '" + i + "' for transaction " + t.id
 				result = self.process_instruction(i)
-				print 'result = ' + str(result)
 				if result == globalz.Flag.Success:
+					print "success!"
 					t.instruction_buffer = ""
 				elif result == globalz.Flag.Wait:
-					instructions_remaining = True
-		return instructions_remaining
+					print "no dice. try again later."
 
 	def process_instruction(self, i):
 		"""

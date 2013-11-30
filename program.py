@@ -1,6 +1,7 @@
 import sys, re
 import globalz
 from initialize_db import initialize
+from collections import Counter
 
 # initialize data in sites, and tm directory
 initialize()
@@ -12,15 +13,14 @@ initialize()
 	
 # accept stdin input stream, line by line
 line = sys.stdin.readline()
-instructions_remaining = False
 
-while line or instructions_remaining:
+while line:
 	globalz.clock += 1 # advance time by 1
 	
 	# print "Current time:" + str(globalz.clock)
 	
 	# re-try all pending instructions
-	instructions_remaining = globalz.tm.attempt_pending_instructions()
+	globalz.tm.attempt_pending_instructions()
 	
 	if line:
 		print 'Input: ' + line.strip()
@@ -33,3 +33,10 @@ while line or instructions_remaining:
 			globalz.tm.process_instruction(instruction.strip())
 	
 		line = sys.stdin.readline() # repeat
+
+# in case there are still pending instructions
+# continue incrementing clock and attempting them
+num_transactions = len(globalz.tm.transactions)
+for loop in range(num_transactions):
+	globalz.clock += 1
+	globalz.tm.attempt_pending_instructions()
