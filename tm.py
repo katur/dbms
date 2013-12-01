@@ -58,6 +58,7 @@ class TransactionManager(object):
 				if result == globalz.Flag.Success:
 					print "success!"
 					t.instruction_buffer = ""
+
 				elif result == globalz.Flag.Wait:
 					print "no dice. try again later."
 
@@ -117,9 +118,9 @@ class TransactionManager(object):
 							return
 
 					# if all sites have been up, commit
-					t.status = "committed"
 					for site in t.sites_accessed:
 						site.dm.process_commit(t)	
+					t.status = "committed"
 					
 					print "Successfully committed " + a
 					return globalz.Flag.Success
@@ -148,9 +149,11 @@ class TransactionManager(object):
 						if not site in t.sites_accessed:				
 							t.sites_accessed.append(site)
 						print str(val) + " read from " + site.name
+					
 					elif flag == globalz.Flag.Wait:
-						print "Instruction pending"
 						t.instruction_buffer = i
+						print "Instruction pending: " + i
+					
 					else: # flag == globalz.Flag.Abort
 						self.abort_transaction(t)
 				return flag

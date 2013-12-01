@@ -36,10 +36,15 @@ class DataManager(object):
 			- vid: the variable name to be read
 		"""
 		request_result = self.lm.request_lock(t,vid,'r')
+		
 		if request_result == globalz.Flag.Success:
 			version_list = self.site.variables[vid].versions
-			return [request_result,version_list[0].value]
-		else:
+			for version in version_list:
+				if version.committed:
+					return [request_result, version.value]
+				# impossible for no committed versions	
+		
+		else: # read not completed yet
 			return [request_result,None]
 	
 	def process_write(self,t,vid,val):
