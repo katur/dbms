@@ -1,0 +1,7 @@
+shasha clarified the following rules regarding the input:
+- no two transactions will have the same age
+- per timepoint, at most one operation per transaction
+- no conflicts in concurrent operations
+- when a transaction is waiting (due to locks or sites being down),
+	it will not receive another operation
+- there will be no other command on a line that has a fail (or a recover)
