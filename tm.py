@@ -23,7 +23,6 @@ class TransactionManager(object):
 		pprint(self.transactions)
 		
 	def abort_transaction(self,t):
-		print "Aborting transaction " + t.id
 		t.status = "aborted"
 		for site,access_time in t.sites_accessed:
 			site.dm.process_abort(t)	
@@ -120,6 +119,7 @@ class TransactionManager(object):
 					for site,access_time in t.sites_accessed:
 						# if some site hasn't been up, abort
 						if site.activation_time > access_time:
+							print "Aborting transaction " + t.id + " due to avail copies algo"
 							self.abort_transaction(t)
 							return
 
@@ -133,7 +133,7 @@ class TransactionManager(object):
 		# IF READ #
 		###########
 		elif re.match("^R\(.+\,.+\)", i):
-			tid, vid = [x.strip() for x in a.split(',')]
+			tid,vid = [x.strip() for x in a.split(',')]
 			t = self.transactions[tid]
 			site = self.locate_read_site(vid)
 			
@@ -160,6 +160,7 @@ class TransactionManager(object):
 						print "Must wait (lock): " + i
 					
 					else: # flag == globalz.Flag.Abort
+						print "Aborting transaction " + t.id + " due to wait-die"
 						self.abort_transaction(t)
 				
 		############
@@ -182,6 +183,7 @@ class TransactionManager(object):
 					elif flag == globalz.Flag.Wait:
 						must_wait = True
 					elif flag == globalz.Flag.Abort:
+						print "Aborting transaction " + t.id + " due to wait-die"
 						self.abort_transaction(t)
 						return
 				else:
