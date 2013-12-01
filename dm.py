@@ -24,7 +24,7 @@ class DataManager(object):
 		"""
 		version_list = self.site.variables[vid].versions
 		for version in version_list:
-			if version.timestamp<=t.start_time and version.committed:
+			if version.timestamp<=t.start_time and version.is_committed:
 				return version.value
 
 	def process_rw_read(self,t,vid):
@@ -40,7 +40,7 @@ class DataManager(object):
 		if request_result == globalz.Flag.Success:
 			version_list = self.site.variables[vid].versions
 			for version in version_list:
-				if version.committed:
+				if version.is_committed:
 					return [request_result, version.value]
 				# impossible for no committed versions	
 		
@@ -76,7 +76,7 @@ class DataManager(object):
 			var = self.site.variables[vid]
 			latest_version = var.versions[0]
 			latest_version.timestamp = globalz.clock
-			latest_version.committed = True
+			latest_version.is_committed = True
 		self.lm.release_locks(t)
 		
 	def process_abort(self,t):

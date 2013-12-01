@@ -27,6 +27,6 @@ class Site(object):
 		for variable in self.variables.values():
 			print variable.name
 			for version in variable.versions:
-				if version.committed:
+				if version.is_committed:
 					print version.value
 					break
