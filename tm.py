@@ -247,6 +247,14 @@ class TransactionManager(object):
 			for site in self.directory[a]['sitelist']:
 				print site.name + ":" + str(site.variables[a].get_committed_version().value)
 
+		elif re.match("^querystate\(\)", i):
+			print "transactions in tm:"
+			self.print_transactions()
+			print "state of sites:"
+			for site in globalz.sites:
+				site.print_site_state()
+		
+
 		###############################
 		# IF NOT AN INSTRUCTION ABOVE #
 		###############################

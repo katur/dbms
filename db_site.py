@@ -16,11 +16,20 @@ class Site(object):
 		self.dm = DataManager(self)
 		self.tm = tm
 
+	def __str__(self):
+		return self.name
+
 	def __repr__(self):
 		return self.name
 
 	def print_site_state(self):
-		print self.name + "; active:" + str(self.active) + "; activation time:" + str(self.activation_time) + "; variables:"
+		string = str(self)
+		if self.active:
+			string += ', active since ' + str(self.activation_time)
+		else:
+			string += ', failed'
+		string += ": "
+		print string
 		pprint(self.variables)
 
 	def print_committed_variables(self):

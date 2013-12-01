@@ -5,11 +5,6 @@ from collections import Counter
 
 # initialize data in sites, and tm directory
 initialize()
-
-#for site in globalz.sites:
-#	site.print_site_state()
-
-#globalz.tm.print_directory()		
 	
 # accept stdin input stream, line by line
 line = sys.stdin.readline()
@@ -18,7 +13,7 @@ while line:
 	if re.match("^\/\/", line): # if comment
 		print ">>comment: " + line
 	
-	else:
+	elif line.strip() != "": # skip blank lines
 		globalz.clock += 1 # advance time by 1
 		print "TIME " + str(globalz.clock)
 	

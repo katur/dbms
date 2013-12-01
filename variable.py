@@ -7,11 +7,11 @@ class Variable(object):
 		self.name = name
 		self.versions = []
 	
-	def __repr__(self):
-		return "var:" + self.name + ", versions:" + str(self.versions)
-
 	def __str__(self):
-		return "var:" + self.name + ", versions:" + str(self.versions)
+		return self.name
+
+	def __repr__(self):
+		return str(self.versions)
 
 	def get_committed_version(self):
 		for version in self.versions:
