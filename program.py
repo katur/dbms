@@ -16,16 +16,16 @@ line = sys.stdin.readline()
 
 while line:
 	if re.match("^\/\/", line): # if comment
-		print "// printing comment: " + line
+		print ">>comment: " + line
 	
 	else:
 		globalz.clock += 1 # advance time by 1
-		# print "Current time:" + str(globalz.clock)
+		print "TIME " + str(globalz.clock)
 	
 		# re-try all pending instructions
 		globalz.tm.attempt_pending_instructions()
 	
-		print "Input Line: " + line.strip()
+		print ">>" + line.strip()
 
 		# parse new instruction(s) from input line
 		instructions = line.split(";")

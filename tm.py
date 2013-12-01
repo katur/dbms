@@ -25,7 +25,7 @@ class TransactionManager(object):
 	def abort_transaction(self,t):
 		print "Aborting transaction " + t.id
 		t.status = "aborted"
-		for site in t.sites_accessed:
+		for site,access_time in t.sites_accessed:
 			site.dm.process_abort(t)	
 	
 	def num_active_transactions(self):
@@ -59,15 +59,12 @@ class TransactionManager(object):
 		ts = self.transactions.values()
 		for t in ts:
 			if t.status is "active" and t.instruction_buffer:
-				i = t.instruction_buffer
-				print "attempting buffered '" + i + "' for transaction " + t.id
-				result = self.process_instruction(i)
-				if result == globalz.Flag.Success:
-					print "success!"
-					t.instruction_buffer = ""
-
-				elif result == globalz.Flag.Wait:
-					print "no dice. try again later."
+				i = t.instruction_buffer # save instruction
+				t.instruction_buffer = "" # reset buffer
+				# note: above step okay because if instruction 
+				#   still pending, processing will refill the buffer
+				print "Attempting buffered '" + i + "' for transaction " + t.id
+				self.process_instruction(i)
 
 	def process_instruction(self, i):
 		"""
@@ -106,42 +103,37 @@ class TransactionManager(object):
 		###################
 		elif re.match("^end\(T\d*\)", i):
 			if a not in self.transactions:
-				print_warning(i, "transaction does not exist")
+				print_warning(i,"transaction does not exist")
 			else:
-				print 'Request to commit ' + a
 				t = self.transactions[a]
 				if t.status is "committed":
-					print_warning(i, "transaction previously committed")
+					print_warning(i,"transaction previously committed")
 				elif t.status is "aborted":
-					print_warning(i, "transaction previously aborted")
+					print_warning(i,"transaction previously aborted")
 				elif t.instruction_buffer:
-					print_warning(i, "can't commit due to a buffered instruction")
+					print_warning(i,"can't commit due to a buffered instruction")
 				elif t.is_read_only:
 					t.status = "committed"
-					print "Commited RO transaction " + a
+					print "Committed RO transaction " + a
 				else:
 					# make sure all sites have been up
-					for site in t.sites_accessed:
+					for site,access_time in t.sites_accessed:
 						# if some site hasn't been up, abort
-						if site.activation_time > t.start_time:
+						if site.activation_time > access_time:
 							self.abort_transaction(t)
 							return
 
 					# otherwise, commit
-					for site in t.sites_accessed:
+					for site,access_time in t.sites_accessed:
 						site.dm.process_commit(t)
 					t.status = "committed"
-					
 					print "Committed " + a
-					return globalz.Flag.Success
 		
 		###########
 		# IF READ #
 		###########
 		elif re.match("^R\(.+\,.+\)", i):
-			tid,vid = a.split(',')
-			tid = tid.strip()
-			vid = vid.strip()
+			tid, vid = [x.strip() for x in a.split(',')]
 			t = self.transactions[tid]
 			site = self.locate_read_site(vid)
 			
@@ -150,34 +142,32 @@ class TransactionManager(object):
 				t.instruction_buffer = i
 
 			else: # if active site found
-				if t.is_read_only:
+				if t.is_read_only: # will succeed regardless
 					val = site.dm.process_ro_read(t,vid)
 					print str(val) + " read from " + site.name
 				
-				else: # t is read/write
+				else: # if t is read/write, may need to wait
 					flag,val = site.dm.process_rw_read(t,vid)
-				
+					
+					# if read was successful
 					if flag == globalz.Flag.Success:
-						if not site in t.sites_accessed:
-							t.sites_accessed.append(site)
+						t.add_site_access(site) # add to sites_accessed
 						print str(val) + " read from " + site.name
 					
+					# if read is waiting on a lock
 					elif flag == globalz.Flag.Wait:
 						t.instruction_buffer = i
-						print "Instruction pending: " + i
+						print "Must wait (lock): " + i
 					
 					else: # flag == globalz.Flag.Abort
 						self.abort_transaction(t)
-					return flag
 				
 		############
 		# IF WRITE #
 		############
 		elif re.match("^W\(.+\,.+\,.+\)", i):
-			tid,vid,val = a.split(',')
-			tid = tid.strip()
-			vid = vid.strip()
-			val = int(val.strip())
+			tid,vid,val = [x.strip() for x in a.split(',')]
+			val = int(val)
 			t = self.transactions[tid]			
 			
 			site_list = self.directory[vid]['sitelist']
@@ -187,18 +177,22 @@ class TransactionManager(object):
 				if site.active:
 					flag = site.dm.process_write(t,vid,val)
 					if flag == globalz.Flag.Success:
-						if not site in t.sites_accessed:
-							t.sites_accessed.append(site)
-					if flag == globalz.Flag.Wait:
+						# add the site to sites_accessed
+						t.add_site_access(site)
+					elif flag == globalz.Flag.Wait:
 						must_wait = True
 					elif flag == globalz.Flag.Abort:
 						self.abort_transaction(t)
+						return
 				else:
 					num_active -= 1					
-			if num_active == 0 or must_wait:
+			
+			if num_active == 0:
+				print "Must wait: no active site found for write"
 				t.instruction_buffer = i
-			else:
-				return globalz.Flag.Success
+			elif must_wait:
+				print "Must wait for locks"
+				t.instruction_buffer = i
 
 		################
 		# IF FAIL SITE #

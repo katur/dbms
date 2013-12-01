@@ -5,9 +5,8 @@ import globalz
 class DataManager(object):
 	"""
 	Data manager object.
-	There is one data manager for every distributed site,
-	the data manager managing the reads and writes
-	for that site.
+	There is one data manager for each site,
+	managing the reads and writes for that site.
 	Each data manager has its own Lock Manager.
 	"""
 	def __init__(self,site):
@@ -63,6 +62,7 @@ class DataManager(object):
 			# create new version and insert at the beginning of the list
 			new_version = VariableVersion(val,globalz.clock,t,False)
 			version_list.insert(0,new_version)
+			print vid + "=" + str(val) + " written (uncommitted) at " + self.site.name
 		return request_result
 	
 	def process_commit(self,t):
@@ -71,11 +71,11 @@ class DataManager(object):
 		Argument:
 			- t: the transaction to be committed.
 		"""
-		variables_accessed = self.lm.transaction_locks[t]
-		print str(len(variables_accessed)) + " variables accessed to be committed"
-		for vid in variables_accessed:
+		var_accessed = self.lm.transaction_locks[t]
+		print str(len(var_accessed)) + " variables accessed to be committed"
+		for vid in var_accessed:
 			var = self.site.variables[vid]
-			latest_version = var.versions[0]
+			latest_version = var.versions[0] # only need to commit most recent write
 			latest_version.timestamp = globalz.clock
 			latest_version.is_committed = True
 		self.lm.release_locks(t)
@@ -86,4 +86,4 @@ class DataManager(object):
 		Argument:
 			- t: the transaction to be aborted.
 		"""
-		self.lm.release_locks(t)	
+		self.lm.release_locks(t)
