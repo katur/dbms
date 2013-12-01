@@ -38,6 +38,10 @@ class LockManager(object):
 		else:
 			lockers = self.lock_table[vid]['ts']
 			# lock held by older transaction
+			
+			# ****************** 
+			# need to check all locks here, not just the first one...
+			# *******************
 			if lockers[0].start_time < transaction.start_time:
 				return globalz.Flag.Abort
 			# write request conflicts with younger transaction

@@ -14,7 +14,6 @@ class Site(object):
 		self.activation_time = 0
 		self.variables = {}
 		self.dm = DataManager(self)
-		self.tm = tm
 
 	def __str__(self):
 		return self.name

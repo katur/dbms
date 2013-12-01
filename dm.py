@@ -41,9 +41,10 @@ class DataManager(object):
 			for version in version_list:
 				if version.is_committed:
 					return [request_result, version.value]
-				# impossible for no committed versions	
+				# impossible to have no committed versions,
+				#		since initial versions are committed
 		
-		else: # read not completed yet
+		else: # read not achieved
 			return [request_result,None]
 	
 	def process_write(self,t,vid,val):
@@ -62,7 +63,7 @@ class DataManager(object):
 			# create new version and insert at the beginning of the list
 			new_version = VariableVersion(val,globalz.clock,t,False)
 			version_list.insert(0,new_version)
-			print vid + "=" + str(val) + " written (uncommitted) at " + self.site.name
+			print vid + "=" + str(val) + " written at " + self.site.name + " (uncommitted)"
 		return request_result
 	
 	def process_commit(self,t):
