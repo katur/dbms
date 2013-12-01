@@ -100,7 +100,7 @@ class TransactionManager(object):
 			if a not in self.transactions:
 				print_warning(i, "transaction does not exist")
 			else:
-				print 'Commit request found: ' + a
+				print 'Request to commit ' + a
 				t = self.transactions[a]
 				if t.status is "committed":
 					print_warning(i, "transaction previously committed")
@@ -121,58 +121,9 @@ class TransactionManager(object):
 					for site in t.sites_accessed:
 						site.dm.process_commit(t)	
 					
-					print "Committed " + a
+					print "Successfully committed " + a
 					return globalz.Flag.Success
-
-		################
-		# IF FAIL SITE #
-		################
-		elif re.match("^fail\(\d*\)", i):
-			index = int(a) - 1
-			if index<0 or index>=10:
-				print_warning(i, "site does not exist")
-			else:
-				site = globalz.sites[index]
-				if not site.active:
-					print_warning(i, "site already failed")
-				else:
-					site.active = False
-					print "Site " + a + " failed"
-
-		###################
-		# IF RECOVER SITE #
-		###################
-		elif re.match("^recover\(\d*\)", i):
-			index = int(a) - 1
-			if index<0 or index>=10:
-				print_warning(i, "site does not exist")
-			else:
-				site = globalz.sites[index]
-				if site.active:
-					print_warning(i, "site already active")
-				else:
-					site.active = True
-					print "Site " + a + " recovered"
-
-		###########
-		# IF DUMP #
-		###########
-		elif re.match("^dump\(\)", i):
-			print "Dump of all copies all var all sites:\n"
-			for site in globalz.sites:
-				print site.name
-				site.print_committed_variables()
-
-		elif re.match("^dump\(\d*\)", i):
-			print "Dump of site " + a + ":\n"
-			index = int(a) - 1
-			site = globalz.sites[index]
-			print site.name
-			site.print_committed_variables()
-
-		elif re.match("^dump\(x\d*\)", i):
-			print "dump variable " + a
-
+		
 		###########
 		# IF READ #
 		###########
@@ -226,7 +177,55 @@ class TransactionManager(object):
 				t.instruction_buffer = i
 			else:
 				return globalz.Flag.Success
-			
+
+		################
+		# IF FAIL SITE #
+		################
+		elif re.match("^fail\(\d*\)", i):
+			index = int(a) - 1
+			if index<0 or index>=10:
+				print_warning(i, "site does not exist")
+			else:
+				site = globalz.sites[index]
+				if not site.active:
+					print_warning(i, "site already failed")
+				else:
+					site.active = False
+					print "Site " + a + " failed"
+
+		###################
+		# IF RECOVER SITE #
+		###################
+		elif re.match("^recover\(\d*\)", i):
+			index = int(a) - 1
+			if index<0 or index>=10:
+				print_warning(i, "site does not exist")
+			else:
+				site = globalz.sites[index]
+				if site.active:
+					print_warning(i, "site already active")
+				else:
+					site.active = True
+					print "Site " + a + " recovered"
+
+		###########
+		# IF DUMP #
+		###########
+		elif re.match("^dump\(\)", i):
+			print "Dump of all copies all var all sites:\n"
+			for site in globalz.sites:
+				print site.name
+				site.print_committed_variables()
+
+		elif re.match("^dump\(\d*\)", i):
+			print "Dump of site " + a + ":\n"
+			index = int(a) - 1
+			site = globalz.sites[index]
+			print site.name
+			site.print_committed_variables()
+
+		elif re.match("^dump\(x\d*\)", i):
+			print "dump variable " + a
 
 		###############################
 		# IF NOT AN INSTRUCTION ABOVE #
