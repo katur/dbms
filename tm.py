@@ -130,6 +130,8 @@ class TransactionManager(object):
 		###########
 		elif re.match("^R\(.+\,.+\)", i):
 			tid,vid = a.split(',')
+			tid = tid.strip()
+			vid = vid.strip()
 			t = self.transactions[tid]
 			site = self.locate_read_site(vid)
 			
@@ -162,7 +164,10 @@ class TransactionManager(object):
 		# IF WRITE #
 		############
 		elif re.match("^W\(.+\,.+\,.+\)", i):
-			tid,vid,val = a.split(',')				
+			tid,vid,val = a.split(',')
+			tid = tid.strip()
+			vid = vid.strip()
+			val = int(val.strip())
 			t = self.transactions[tid]			
 			site_list = self.directory[vid]['sitelist']
 			num_active = len(site_list)
