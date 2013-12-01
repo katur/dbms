@@ -1,7 +1,7 @@
-// both should commit
+// committing writes
 begin(T1)
 W(T1,x1,36)
 end(T1)
-begin(T2)
+beginRO(T2)
 R(T2,x1)
 end(T2)

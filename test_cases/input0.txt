@@ -1,3 +1,4 @@
+// T2 should die
 begin(T1)
 begin(T2)
 R(T1,x2)

@@ -19,6 +19,7 @@ class LockManager(object):
 		
 	def release_locks(self,transaction):
 		for vid in self.transaction_locks[transaction]:
+			print "releasing a lock"
 			entry = self.lock_table[vid]
 			entry['ts'].remove(transaction)
 			if len(entry['ts']) == 0:

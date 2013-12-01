@@ -72,6 +72,7 @@ class DataManager(object):
 			- t: the transaction to be committed.
 		"""
 		variables_accessed = self.lm.transaction_locks[t]
+		print str(len(variables_accessed)) + " variables accessed to be committed"
 		for vid in variables_accessed:
 			var = self.site.variables[vid]
 			latest_version = var.versions[0]
