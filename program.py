@@ -9,7 +9,7 @@ initialize()
 #for site in globalz.sites:
 #	site.print_site_state()
 
-#globalz.tm.print_directory()		
+globalz.tm.print_directory()		
 	
 # accept stdin input stream, line by line
 line = sys.stdin.readline()

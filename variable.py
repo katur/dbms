@@ -12,3 +12,8 @@ class Variable(object):
 
 	def __str__(self):
 		return "var:" + self.name + ", versions:" + str(self.versions)
+
+	def get_committed_version(self):
+		for version in self.versions:
+			if version.is_committed:
+				return version

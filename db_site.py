@@ -25,8 +25,10 @@ class Site(object):
 
 	def print_committed_variables(self):
 		for variable in self.variables.values():
-			print variable.name
+			print(variable.name + ":"),
 			for version in variable.versions:
 				if version.is_committed:
-					print version.value
+					print(version.value),
 					break
+			print(";"),
+		print "\n"
