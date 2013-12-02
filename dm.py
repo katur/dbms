@@ -29,6 +29,9 @@ class DataManager(object):
 							break
 					print( 'Transaction ' + str(t) + 'reads value ' +
 							str(read_value) + ' from ' + self.site.name )
+					
+					# NOTE: should switch to this for printing:
+					# globalz.print_read_result(read_value,self.site,t) 
 					globalz.tm.update_waiting_transaction(t,self.site)							
 			# some pending transaction(s) has obtained an exclusive lock
 			elif updates:

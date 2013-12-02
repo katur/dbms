@@ -6,9 +6,6 @@ from transaction import Transaction
 def print_warning(instruction, reason):
 	print 'Warning, ignoring instruction "' + instruction + '": ' + reason
 
-def print_read_result(val, site, transaction):
-	print str(val) + " read from " + str(site) + " for " + str(transaction)
-
 class TransactionManager(object):
 	"""
 	A transaction manager object
@@ -175,7 +172,7 @@ class TransactionManager(object):
 					# NOTE: need to add loop here to try more sites in case some don't have good version.
 					# also need to cover case that we need to wait for a non-active site
 					val = site.dm.process_ro_read(t,vid)
-					print_read_result(val,site,t)
+					globalz.print_read_result(val,site,t)
 				
 				else: # if t is read/write, may need to wait
 					flag,val = site.dm.process_rw_read(t,vid)
@@ -183,7 +180,7 @@ class TransactionManager(object):
 					# if read was successful
 					if flag == globalz.Flag.Success:
 						t.add_site_access(site) # add to sites_accessed
-						print_read_result(val,site,t)
+						globalz.print_read_result(val,site,t)
 					
 					# if read is waiting on a lock
 					elif flag == globalz.Flag.Wait:
