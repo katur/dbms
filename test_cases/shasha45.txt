@@ -1,5 +1,5 @@
 // Test 4
-// Now T1 aborts, since site 2 died after T1 accessed it. T2 ok.
+// T1 should abort since site 2 is dead at commit time, i.e. after T1 accessed it. T2 ok.
 begin(T1)
 begin(T2)
 W(T1,x1,45)
@@ -8,6 +8,5 @@ fail(2)
 W(T2,x8,88); R(T2,x3)
 R(T1, x5)
 end(T2)
-recover(2)
 end(T1)
-dump()
+recover(2)

@@ -209,7 +209,6 @@ class TransactionManager(object):
 				if site.active:
 					flag = site.dm.process_write(t,vid,val)
 					if flag == globalz.Flag.Success:
-						# add the site to sites_accessed
 						t.add_site_access(site)
 					elif flag == globalz.Flag.Wait:
 						#t.pending_lock_sites.append(site)
@@ -265,6 +264,7 @@ class TransactionManager(object):
 					print_warning(i, "site already active")
 				else:
 					site.active = True
+					site.activation_time = globalz.clock 
 					print "Site " + a + " recovered"
 
 		###########
