@@ -54,10 +54,6 @@ python program.py < input.txt
 	* per var, a next counter indicating the site (list index) to try next, so that we don’t overuse any one site for reads
 - transactions dictionary
 	* keyed on transaction name.
-- begin(T) or beginRO(T)
-- various printing functions
-	* print_directory
-	* print_transactions
 - abort_transaction(self,t)
 	* marks t as aborted and calls dm.process_abort(t) at all sites
 - num_active_transactions(self)

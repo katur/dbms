@@ -20,14 +20,6 @@ class TransactionManager(object):
 		#		value is the transaction object
 		self.transactions = {}
 
-	def print_directory(self):
-		print "tm's variable directory:"
-		pprint(self.directory)
-
-	def print_transactions(self):
-		print "tm's transaction directory:"
-		pprint(self.transactions)
-		
 	def abort_transaction(self,t):
 		t.status = "aborted"
 		for site,access_time in t.sites_accessed:
@@ -296,7 +288,6 @@ class TransactionManager(object):
 			for site in globalz.sites:
 				site.print_site_state()
 		
-
 		###############################
 		# IF NOT AN INSTRUCTION ABOVE #
 		###############################
@@ -304,3 +295,11 @@ class TransactionManager(object):
 			print_warning(i, "instruction not found")
 
 		return
+	
+	def print_directory(self):
+		print "tm's variable directory:"
+		pprint(self.directory)
+
+	def print_transactions(self):
+		print "tm's transaction directory:"
+		pprint(self.transactions)	
