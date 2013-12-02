@@ -14,22 +14,22 @@ If input is in file `input.txt`:
 python program.py < input.txt
 ```
 
-# Design Document
+## Design Document
 
-## Main program
+### Main program
 - initialize the data in the sites, as well as the TM’s directory, per the spec
 - loop inputting a lint at a time from stdin
 - for each line, parse the individual instructions
 - send each instruction to TM to process
 
-## Globals
+### Globals
 - clock integer
 	* =0 at beginning of program
 	* increments with each line of input
 - 1 TM
 - 10 sites
 
-## Transaction object
+### Transaction object
 - start_time integer
 	* clock time when transaction was created
 - is_read_only Boolean
@@ -39,7 +39,7 @@ python program.py < input.txt
 	* pending instruction not performed due to no active site being found on a previous cycle (this instruction to be attempted in all subsequent clock cycles until site(s) available)
 *Note that Transaction objects must be made accessible to DMs (so DM can access start_time for wait-die and MV)*
 
-## Transaction\_Manager object
+### Transaction\_Manager object
 directory dictionary
 keyed on variable name
 per var, a list with all sites including copies of that var
@@ -64,24 +64,24 @@ dump(), dump(site), dump(var)
 iterate over relevant information and print it to console
 querystate(): a function for our own debugging sanity
 
-## Site object (10 total)
+### Site object (10 total)
 name: this site’s name (e.g. “site1”)
 active: Boolean for whether or not site is currently active, init to True.
 activation_time: most recent recovery time, init to 0
 variables: hash with variables present at this site. key is variable name, value is Variable object
 dm: data manager for this site
 
-## Variable object
+### Variable object
 versions: linked list of the versions of that variable over time (needed for multiversion for RO transactions)
 locked_by: the transaction, if any, holding a lock on this variable (note that our “per site lock table” is actually just a field on our variable objects, so the operation of wiping all locks involves traversing the entire hashmap of variables
 
-## VariableVersion object
+### VariableVersion object
 value: the value written to this version of the variable
 time_written: the time this version was written by some transaction
 written_by: the transaction that wrote this version
 committed: Boolean of whether or not this version is committed
 
-## DataManager object
+### DataManager object
 lm: lock manager for this data manager
 processing message from TM
 site failure
@@ -100,10 +100,10 @@ tell LM to unlock all T’s locks (the LM will also handle assigning newly unloc
 request to abort T
 tell LM to unlock all T’s locks (again, the LM handles re-assigning the locks). we will just leave T’s uncommitted writes as is (with committed=False to signify not to use these values). alternately we could find and delete these values.
 
-##Lock Manager object
+### Lock Manager object
 lock_table: dictionary keyed on var present at the site, value a lock if there is one at the site
 Handles all locks for this site. Separate notion of shared read lock and exclusive write lock. Implements wait-die by rejecting younger if a lock is held by older (sending a message to TM that transaction is killed), or putting older in a queue if lock is held by younger. Must be able to both access lock state by variable name, but also access all locks for a particular transaction (so that when the transaction ends the LM can find all its locks to release). Whenever a lock is released, LM is responsible for re-assigning the lock if transactions are waiting.
 
-## Lock object
+### Lock object
 
-## Message object
+### Message object
