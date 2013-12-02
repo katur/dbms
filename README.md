@@ -81,11 +81,10 @@ python program.py < input.txt
 		+ mark the site as failed
 		+ clear lock table
 		+ mark all replicated variable's versions as not available_for_read
-recover(site)
-send recovery message to site’s corresponding DM
-dump(), dump(site), dump(var)
-iterate over relevant information and print it to console
-querystate(): a function for our own debugging sanity
+	* recover(site)
+		+ mark the site as active
+		+ see if any transcations waiting on write should be writing to the newly recovered site 
+	* dump(), dump(site), dump(var), querystate(): dump info to console
 
 ### Site object (10 total)
 - name: this site's name (e.g. "site1")
