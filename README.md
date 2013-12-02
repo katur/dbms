@@ -17,30 +17,35 @@ python program.py < input.txt
 ## Design Document
 
 ### Main program
-- initialize the data in the sites, as well as the TM's directory, per the spec
-- loop
-	* inputting a line from stdin (skipping if whitespace or a comment)
+- call initialize() function to initialize the data in the sites, create the TM's variable directory, and create lock objects for each var at each site, per the spec.
+- loop:
+	* input a line from stdin (skipping if whitespace or a comment)
 	* increment time
-	* try all pending instructions (`site.dm.try\_pending()`)
-	* parse the new input line
-	* send each instructions to the tm to execute (`tm.process\_instruction`)
+	* try all pending instructions (site.dm.try_pending())
+	* parse the new input line, splitting on semicolon
+	* send each instructions to the tm to execute (tm.process_instruction)
 - finally, loop until no more pending instructions
 
 ### Globals
-- clock: 
+- clock:
 	* integer initialized to 0
 	* increments with each line of input
 - tm: 1 Transaction Manager object
 - sites: list of 10 sites, named site1 through site10
+- var_ids: list of all var ids
+- Flag class: signal for result of a lock request
 
 ### Transaction object
+- id: the transaction id
+- status: "active", "committed", "aborted"
 - start_time: clock time when transaction was created
 - is_read_only Boolean
+- instruction_buffer
+	* pending instruction not completed (due to no active site, or blocked on locks)
 - sites_accessed list
-	* sites accessed in T’s lifetime (to see if all up since T began, per Available Copies Algorithm)
-- instruction_buffer string
-	* pending instruction not performed due to no active site being found on a previous cycle (this instruction to be attempted in all subsequent clock cycles until site(s) available)
-*Note that Transaction objects must be made accessible to DMs (so DM can access start_time for wait-die and MV)*
+	* list of tuples, each tuple being a site that was accessed and the initial time of access. needed for available copies algorithm
+- blocking_locks: list of locks the transactions is enqueued waiting for. Note that this list must be updated when the transaction is dequeued, or if the site fails.
+- add_site_access(self,site): adds a site w/current clock if not in sites_accessed
 
 ### Transaction\_Manager object
 - directory dictionary
@@ -50,15 +55,32 @@ python program.py < input.txt
 - transactions dictionary
 	* keyed on transaction name.
 - begin(T) or beginRO(T)
-create transaction with start_time=clock and RO bit set
-end(T)
-for each site in in T.sites_accessed, confirm that its site_activation_time precedes T.start_time. If so, commit T by sending a message to all sites telling them to commit T (described in DM) and printing to console that T committed. If not, abort T by sending a message to all sites telling them to abort T, and printing to console that T aborted due to our available copies algorithm / site x’s failure.
-R(T,var)
-use directory to look up the next active read site for var. If no active sites, save the read instruction in T.instruction_buffer, and add T to pending_instructions (to try at subsequent clock cycles). If an active site is found, send read request message to the corresponding DM, specifying if the transaction is RO or RW. If DM responds with the value read, print to console. If DM responds that the transaction was killed due to wait-die, take appropriate actions and print this info to console. Or, if instruction is waiting on a lock, possibly print this to console (and note that some subsequent DM response will include the value read).
-W(T,var,value)
-use directory to look up all active sites with var. Send write request messages to all corresponding DMs. If none available, save the write instruction in T.instruction_buffer and add T to pending_instructions.
-fail(site)
-send failure message to site’s corresponding DM
+- various printing functions
+	* print_directory
+	* print_transactions
+- abort_transaction(self,t)
+	* marks t as aborted and calls dm.process_abort(t) at all sites
+- num_active_transactions(self)
+- transactions_active(self): returns Boolean if any active transactions
+- update_waiting_transaction(self,t,site): for each in t.pending_accesses, remove the access if site matches site
+- locate read site: locate next read site
+- attempt_pending_instructions
+	* try all pending instructions, and clear instruction buffer (buffer might simply be filled by the same instruction again)
+- process_instruction(self, i):
+	* begin(T) or beginRO(T): create transaction with start_time=clock and RO bit set
+	* end(T)
+		+ if RO reached this point, can commit no matter what.  
+		+ for RW, do avail copies: for each site in in T.sites_accessed, confirm that the site is currently up, and that its site_activation_time precedes the transaction's access time. If so, commit T by sending a message to all sites telling them to commit T. If not, abort T by sending a message to all sites telling them to abort T. Either way, print result to console.
+	* R(T,var)
+		+ use directory to look up the next active read site for var
+		+ if no active sites, save the read instruction in T.instruction_buffer (to try at subsequent clock cycles)
+		+ If an active site is found, send read request message to the corresponding DM, specifying if the transaction is RO or RW. If DM responds with the value read, print to console. If DM responds that the transaction was killed due to wait-die, take appropriate actions and print this info to console. Or, if instruction is waiting on a lock, possibly print this to console (and note that some subsequent DM response will include the value read).
+	* W(T,var,value)
+		+ use directory to look up all active sites with var. Send write request messages to all corresponding DMs. If none available, save the write instruction in T.instruction_buffer.
+	* fail(site)
+		+ mark the site as failed
+		+ clear lock table
+		+ mark all replicated variable's versions as not available_for_read
 recover(site)
 send recovery message to site’s corresponding DM
 dump(), dump(site), dump(var)

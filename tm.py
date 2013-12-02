@@ -11,7 +11,13 @@ class TransactionManager(object):
 	A transaction manager object
 	"""
 	def __init__(self):
-		self.directory = {}
+		# directory keyed on variable name
+		# directory[var]['sitelist']: list of sites w/this variable
+		# directory[var]['next']: the next site to try
+		self.directory = {} 
+		
+		# transactions keyed on transaction name,
+		#		value is the transaction object
 		self.transactions = {}
 
 	def print_directory(self):
@@ -136,10 +142,10 @@ class TransactionManager(object):
 					t.status = "committed"
 					print "Committed RO transaction " + a
 				else:
-					# make sure all sites have been up
+					# make sure all sites are up now, and have been up
 					for site,access_time in t.sites_accessed:
 						# if some site hasn't been up, abort
-						if site.activation_time > access_time:
+						if not site.active or site.activation_time > access_time:
 							print "Aborting transaction " + t.id + " due to avail copies algo"
 							self.abort_transaction(t)
 							return
@@ -164,6 +170,8 @@ class TransactionManager(object):
 
 			else: # if active site found
 				if t.is_read_only: # will succeed regardless
+					# NOTE: need to add loop here to try more sites in case some don't have good version.
+					# also need to cover case that we need to wait for a non-active site
 					val = site.dm.process_ro_read(t,vid)
 					print str(val) + " read from " + site.name
 				

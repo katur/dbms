@@ -49,6 +49,7 @@ class DataManager(object):
 		for version in version_list:
 			if version.timestamp<=t.start_time and version.is_committed:
 				return version.value
+		return None
 
 	def process_rw_read(self,t,vid):
 		"""

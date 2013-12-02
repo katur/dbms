@@ -10,7 +10,6 @@ def initialize():
 		var.versions.append(vers)
 		site.variables[var_name] = var
 		tm.directory[var_name]['sitelist'].append(site)
-		#site.dm.lm.lock_table[var_name] = {'lock':'n', 'ts':[], 'q':[]}
 		site.dm.lm.lock_table[var_name] = LockTableEntry(var_name)
 	
 	# for each variable, x1 through x20
