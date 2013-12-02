@@ -110,6 +110,7 @@ class DataManager(object):
 			  self.site.name + " to be committed" )
 		for vid in var_accessed:
 			var = self.site.variables[vid]
+			# ??? is below necessarily from a write ? if a read, could be committing crap
 			latest_version = var.versions[0] # only need to commit most recent write
 			latest_version.timestamp = globalz.clock
 			latest_version.is_committed = True

@@ -76,7 +76,7 @@ python program.py < input.txt
 	* fail(site)
 		+ mark the site as failed
 		+ clear lock table
-		+ mark all replicated variable's versions as not available_for_read
+		+ mark all replicated variable's versions as not available_for_read (Note: could just delete them, but we're keeping them for debugging purposes)
 	* recover(site)
 		+ mark the site as active
 		+ see if any transcations waiting on write should be writing to the newly recovered site 
@@ -103,23 +103,23 @@ python program.py < input.txt
 - available_for_read: Boolean of whether or not this version is available to read (versus not available to read, due to failure)
 
 ### DataManager object
-lm: lock manager for this data manager
-processing message from TM
-site failure
-set active=False
-site recovery
-set active=True and site_activation_time=clock
-request to read a variable for a RO transaction T
-no lock needed. Simply read the appropriate version of the variable based on T’s start_time. Need to think through what to do if an appropriate version is not available
-request to read a variable for a RW transaction T
-request lock from LM. if rejected due to wait-die, respond with signal to TM that T was killed. otherwise, whenever lock is granted (perhaps after being put in waiting queue), read the most recent committed version and send signal to TM with the value read
-request to write a variable for a RW transaction T
-request lock from LM. if rejected due to wait-die, respond with signal to TM that T was killed. otherwise, whenever lock is granted (perhaps after being put in waiting queue), create new variable version but with committed=False
-request to commit T
-for any variable that had been write locked by T, commit the variable version representing T’s write (by setting committed=True and time_written to current time)
-tell LM to unlock all T’s locks (the LM will also handle assigning newly unlocked locks to transactions waiting on the lock)
-request to abort T
-tell LM to unlock all T’s locks (again, the LM handles re-assigning the locks). we will just leave T’s uncommitted writes as is (with committed=False to signify not to use these values). alternately we could find and delete these values.
+- site: the site the DM is managing 
+- lm: lock manager for this data manager
+- try_pending(): try all to complete all pending accesses for variables at this site (note: Katherine thinks we should switch this to instead be event driven: if a site fails, or if a site recovers, certain pending accesses might happen. Or, if a lock is released, certain actions might be performed)
+- process_ro_read(self,t,vid): process a ro read of vid for t
+	* iterate through versions of the variable, until finding one the first committed one that is old enough
+	* while iterating, if find one not available for read, stop and return none because all preceding would also be unavailable for read
+	* if iterate all the way back to the beginning, return None (shouldn't reach this point...)
+- process_rw_read(self,t,vid): process rw read of vid for t
+	* try to get the lock. if success, find the most recently committed version, and return it. if not, the alert the tm to either abort or wait (wait-die). if wait, the lm will eventually finish and somehow alert the tm... (still need to figure this out...). Also, need to account for cases of site failure/recovery before the read has happened.
+- process_write(self,t,vid,val):
+	* try to get the lock. again, if success, create a new version and insert it at the head of the list, and alert the tm. if wait/die, alert the tm. but still need to figure out how to manage the write happening later...
+- process_commit(self,t)
+	* find all the variables WRITTEN by t at this site, and mark them as committed. (this might be done wrong...), adding the commit timestamp.
+	* unlock all T's locks, which might result in more transactions proceeding 
+- process_abort(self,t)
+	 * release the locks for this transaction. Could delete its uncommitted writes at this point, but we're keeping them in for debugging purposes.
+
 
 ### Lock Manager object
 lock_table: dictionary keyed on var present at the site, value a lock if there is one at the site
