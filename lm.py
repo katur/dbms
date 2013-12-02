@@ -4,16 +4,6 @@ class LockManager(object):
 	"""
 	Lock manager object
 	
-	OUT OF DATE
-	lock_table[var][lock] = {
-		'w' if some transaction holds an exclusive lock on var
-		else 'r' for shared lock
-		else 'n'
-	}					
-	lock_table[var][ts] = list of all transactions 
-					      holding locks on var
-	lock_table[var][q] = list of transactions waiting to
-						 receive a lock on var
 	"""
 	def __init__(self):
 		self.lock_table = {}
@@ -23,11 +13,13 @@ class LockManager(object):
 		lt_entry = self.lock_table[vid]
 		if lt_entry.lock == 'n' and len(lt_entry.q) > 0:
 			updates = {'lock_type':None, 'ts':[]}
+			
 			# pending transaction(s) requests shared lock
 			while lt_entry.q[0].r_type == 'r':
 				updates['lock_type'] = 'r'
 				q_entry = lt_entry.q.pop( )
 				updates['ts'].append(q_entry.transaction)				
+			
 			# pending transaction requests exclusive lock
 			if lt_entry.lock == 'n':
 				updates['lock_type'] = 'w'
@@ -38,10 +30,12 @@ class LockManager(object):
 		else:
 			return None
 		
-	# returns false if older transaction requesting exclusive
-	# lock causes enqueueing transaction to abort.
-	# returns true otherwise
 	def enqueue_transaction(self,transaction,vid,r_type,value):
+		"""
+		returns false if older transaction requesting exclusive
+			lock causes enqueueing transaction to abort.
+		returns true otherwise.
+		"""
 		lt_entry = self.lock_table[vid]
 		for q_entry in lt_entry.q:
 			if( (r_type == 'w' or q_entry.r_type == 'w') and
@@ -119,13 +113,16 @@ class LockManager(object):
 			return self.request_write_lock(transaction,vid,value)							
 
 class LockTableEntry(object):
+	"""
+	Lock Table Entry object
+	"""
 	def __init__(self,var):
-		self.var = var
-		self.lock = 'n'
-		self.locking_ts = []
-		self.q = []
+		self.var = var # the variable this lock is on
+		self.lock = 'n' # 'w' for exclusive, 'r' for shared
+		self.locking_ts = [] # list of transactions currently holding the lock on this var
+		self.q = [] # list of transactions waiting to receive a lock on this var
 	
-	"""		
+	"""
 	def __repr__(self):
 		r = '{Lock table entry: ' + self.var + '; ' + self.lock + '; ' + \
 			   str(self.locking_ts) + '; ' + str(self.q) + '}'
@@ -144,4 +141,3 @@ class QueueEntry(object):
 		self.value = None
 		if r_type == 'w':
 			self.value = value
-			
