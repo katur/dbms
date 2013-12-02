@@ -34,6 +34,15 @@ class TransactionManager(object):
 				count += 1
 		return count
 		
+	def transactions_active(self):
+		for transaction in self.transactions.values( ):
+			if transaction.status == "active":
+				return True
+		return False	
+		
+	def update_waiting_transaction(self,t,site):
+		t.pending_lock_sites.remove(site)
+		
 	def locate_read_site(self, var_id):
 		"""
 		locate next active site for variable var_id.
@@ -64,6 +73,14 @@ class TransactionManager(object):
 				#   still pending, processing will refill the buffer
 				print "Attempting buffered '" + i + "' for transaction " + t.id
 				self.process_instruction(i)
+				
+	"""
+	def check_pending_instructions(self):
+		for t in self.transactions.values( ):
+			if len(t.pending_lock_sites) > 0:
+				return True
+		return False				
+	"""
 
 	def process_instruction(self, i):
 		"""
@@ -109,7 +126,9 @@ class TransactionManager(object):
 					print_warning(i,"transaction previously committed")
 				elif t.status is "aborted":
 					print_warning(i,"transaction previously aborted")
-				elif t.instruction_buffer:
+				#elif t.instruction_buffer:
+				#	print_warning(i,"can't commit due to a buffered instruction")
+				elif len(t.pending_lock_sites) > 0:
 					print_warning(i,"can't commit due to a buffered instruction")
 				elif t.is_read_only:
 					t.status = "committed"
@@ -157,8 +176,8 @@ class TransactionManager(object):
 					# if read is waiting on a lock
 					elif flag == globalz.Flag.Wait:
 						t.instruction_buffer = i
+						t.pending_lock_sites.append(site)
 						print "Must wait (lock): " + i
-					
 					else: # flag == globalz.Flag.Abort
 						print "Aborting transaction " + t.id + " due to wait-die"
 						self.abort_transaction(t)
@@ -181,11 +200,13 @@ class TransactionManager(object):
 						# add the site to sites_accessed
 						t.add_site_access(site)
 					elif flag == globalz.Flag.Wait:
+						t.pending_lock_sites.append(site)
 						must_wait = True
 					elif flag == globalz.Flag.Abort:
 						print "Aborting transaction " + t.id + " due to wait-die"
 						self.abort_transaction(t)
 						return
+
 				else:
 					num_active -= 1					
 			

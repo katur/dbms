@@ -4,62 +4,144 @@ class LockManager(object):
 	"""
 	Lock manager object
 	
+	OUT OF DATE
 	lock_table[var][lock] = {
 		'w' if some transaction holds an exclusive lock on var
 		else 'r' for shared lock
 		else 'n'
 	}					
 	lock_table[var][ts] = list of all transactions 
-					     holding locks on var
-	
+					      holding locks on var
+	lock_table[var][q] = list of transactions waiting to
+						 receive a lock on var
 	"""
 	def __init__(self):
 		self.lock_table = {}
-		self.transaction_locks = {}	
+		self.transaction_locks = {}			
+		
+	def update_queue(self,vid):
+		lt_entry = self.lock_table[vid]
+		if lt_entry.lock == 'n' and len(lt_entry.q) > 0:
+			updates = {'lock_type':None, 'ts':[]}
+			# pending transaction(s) requests shared lock
+			while lt_entry.q[0].r_type == 'r':
+				updates['lock_type'] = 'r'
+				q_entry = lt_entry.q.pop( )
+				updates['ts'].append(q_entry.transaction)				
+			# pending transaction requests exclusive lock
+			if lt_entry.lock == 'n':
+				updates['lock_type'] = 'w'
+				q_entry = lt_entry.q.pop( )
+				updates['ts'] = [q_entry.transaction]
+				updates['write_value'] = q_entry.value
+			return updates
+		else:
+			return None
+		
+	# returns false if older transaction requesting exclusive
+	# lock causes enqueueing transaction to abort.
+	# returns true otherwise
+	def enqueue_transaction(self,transaction,vid,r_type,value):
+		lt_entry = self.lock_table[vid]
+		for q_entry in lt_entry.q:
+			if( (r_type == 'w' or q_entry.r_type == 'w') and
+			q_entry.transaction.start_time < transaction.start_time ):
+				return False
+		lt_entry.q.append(QueueEntry(transaction,r_type,value))
+		return True
 		
 	def release_locks(self,transaction):
 		for vid in self.transaction_locks[transaction]:
 			print "releasing a lock"
-			entry = self.lock_table[vid]
-			entry['ts'].remove(transaction)
-			if len(entry['ts']) == 0:
-				entry['lock'] = 'n'
-		
-	def request_lock(self,transaction,vid,r_type):
-		lock = self.lock_table[vid]['lock']
-		# no lock on variable
-		if lock == 'n':
-			self.lock_table[vid]['lock'] = r_type
-			self.lock_table[vid]['ts'] = [transaction]
+			self.lock_table[vid].locking_ts.remove(transaction)
+			if len(self.lock_table[vid].locking_ts) == 0:
+				self.lock_table[vid].lock = 'n'				
+
+	def request_read_lock(self,transaction,vid):
+		# shared lock on variable
+		if self.lock_table[vid].lock == 'r':
+			self.lock_table[vid].locking_ts.append(transaction)
 			if not transaction in self.transaction_locks:
 				self.transaction_locks[transaction] = []
 			self.transaction_locks[transaction].append(vid)
 			return globalz.Flag.Success
+		# exclusive lock on variable
 		else:
-			lockers = self.lock_table[vid]['ts']
-			# lock held by older transaction
-			
-			# ****************** 
-			# need to check all locks here, not just the first one...
-			# *******************
-			if lockers[0].start_time < transaction.start_time:
+			locking_t = self.lock_table[vid].locking_ts[0]
+			if locking_t.start_time < transaction.start_time:
 				return globalz.Flag.Abort
-			# write request conflicts with younger transaction
-			elif r_type == 'w':
+			enqueue_result = self.enqueue_transaction(transaction,vid,'r',None)
+			if enqueue_result: 
+				return globalz.Flag.Success
+			else:
+				return globalz.Flag.Abort
+		
+	def request_write_lock(self,transaction,vid,value):
+		for t in self.lock_table[vid].locking_ts:
+			if t.start_time < transaction.start_time:
+				return globalz.Flag.Abort
+			enqueue_result = self.enqueue_transaction(transaction,vid,'w',value)
+			if enqueue_result: 
 				return globalz.Flag.Wait
 			else:
-				# read request conflicts with younger 
-				# transaction holding a write lock
-				if lock == 'w':
-					return globalz.Flag.Wait
-				# read request on variable held by younger 
-				# transaction holding a read lock
+				return globalz.Flag.Abort				
+
+	def request_lock(self,transaction,vid,r_type,value):
+		lt_entry = self.lock_table[vid]
+		# no lock on variable
+		if lt_entry.lock == 'n':
+			self.lock_table[vid].lock = r_type
+			self.lock_table[vid].locking_ts = [transaction]
+			if not transaction in self.transaction_locks:
+				self.transaction_locks[transaction] = []
+			self.transaction_locks[transaction].append(vid)
+			return globalz.Flag.Success
+		elif transaction in lt_entry.locking_ts:
+			# transaction already holds an exclusive lock
+			if lt_entry.lock == 'w':
+				return globalz.Flag.Success
+			else:
+			# transaction requests an upgrade from shared lock to exclusive
+				# transaction holds the only shared lock on variable
+				if len(lt_entry.locking_ts) == 1:
+					lt_entry.lock = 'w'
+					return globalz.Flag.Success
 				else:
-					i = 0
-					while lockers[i].start_time < transaction.start_time:
-						i += 1
-					lockers.insert(i,transaction)
-					if not transaction in self.transaction_locks:
-						self.transaction_locks[transaction] = []
-					self.transaction_locks[transaction].append(vid)										
-					return globalz.Flag.Success								
+					enqueue_result = self.enqueue_transaction(transaction,vid,r_type,value)
+					if enqueue_result:
+						return globalz.Flag.Wait
+					else:
+						return globalz.Flag.Abort
+				
+		elif r_type == 'r':
+			return self.request_read_lock(transaction,vid)
+		else:	
+			return self.request_write_lock(transaction,vid,value)							
+
+class LockTableEntry(object):
+	def __init__(self,var):
+		self.var = var
+		self.lock = 'n'
+		self.locking_ts = []
+		self.q = []
+	
+	"""		
+	def __repr__(self):
+		r = '{Lock table entry: ' + self.var + '; ' + self.lock + '; ' + \
+			   str(self.locking_ts) + '; ' + str(self.q) + '}'
+		return r
+
+	def __str__(self):		
+		s = '{Lock table entry: ' + self.var + '; ' + self.lock + '; ' + \
+			   str(self.locking_ts) + '; ' + str(self.q) + '}'
+		return s
+	"""	
+		
+class QueueEntry(object):
+	def __init__(self,transaction,r_type,value):
+		self.transaction = transaction
+		self.r_type = r_type
+		self.value = None
+		if r_type == 'w':
+			self.value = value
+			
