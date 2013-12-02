@@ -27,15 +27,14 @@ python program.py < input.txt
 - finally, loop until no more pending instructions
 
 ### Globals
-- `clock` 
+- clock: 
 	* integer initialized to 0
 	* increments with each line of input
-- `tm`: 1 Transaction Manager object
-- `sites`: list of 10 sites, named `site1` through `site10`
+- tm: 1 Transaction Manager object
+- sites: list of 10 sites, named site1 through site10
 
 ### Transaction object
-- start_time integer
-	* clock time when transaction was created
+- start_time: clock time when transaction was created
 - is_read_only Boolean
 - sites_accessed list
 	* sites accessed in T’s lifetime (to see if all up since T began, per Available Copies Algorithm)
@@ -67,21 +66,24 @@ iterate over relevant information and print it to console
 querystate(): a function for our own debugging sanity
 
 ### Site object (10 total)
-name: this site’s name (e.g. “site1”)
-active: Boolean for whether or not site is currently active, init to True.
-activation_time: most recent recovery time, init to 0
-variables: hash with variables present at this site. key is variable name, value is Variable object
-dm: data manager for this site
+- name: this site's name (e.g. "site1")
+- active: Boolean for whether or not site is currently active (initially True)
+- activation_time: most recent recovery time (initially 0)
+- variables: dictionary of variables present at this site, keyed on variable name, value variable object
+- dm: data manager for this site
 
 ### Variable object
-versions: linked list of the versions of that variable over time (needed for multiversion for RO transactions)
-locked_by: the transaction, if any, holding a lock on this variable (note that our “per site lock table” is actually just a field on our variable objects, so the operation of wiping all locks involves traversing the entire hashmap of variables
+- name: this variable's name
+- replicated: Boolean if whether this is a replicated var (initialized at beginning of program)
+- versions: list of the versions of that variable over time (newest first)
+- get_committed_version(self): iterates over versions to find the most recent committed version 
 
 ### VariableVersion object
-value: the value written to this version of the variable
-time_written: the time this version was written by some transaction
-written_by: the transaction that wrote this version
-committed: Boolean of whether or not this version is committed
+- value: the value written to this version of the variable
+- timestamp: the time this version was written
+- written_by: the transaction that wrote this version
+- is_committed: Boolean of whether or not this version is committed
+- available_for_read: Boolean of whether or not this version is available to read (versus not available to read, due to failure)
 
 ### DataManager object
 lm: lock manager for this data manager
