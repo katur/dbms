@@ -47,6 +47,12 @@ class DataManager(object):
 		"""
 		version_list = self.site.variables[vid].versions
 		for version in version_list:
+			# if encounter a version not avilable to read,
+			# there must have been a failure, so no
+			# further version will be acceptable for read
+			if not version.available_to_read:
+				return None
+
 			if version.timestamp<=t.start_time and version.is_committed:
 				return version.value
 		return None
