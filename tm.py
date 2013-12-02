@@ -6,6 +6,9 @@ from transaction import Transaction
 def print_warning(instruction, reason):
 	print 'Warning, ignoring instruction "' + instruction + '": ' + reason
 
+def print_read_result(val, site, transaction):
+	print str(val) + " read from " + str(site) + " for " + str(transaction)
+
 class TransactionManager(object):
 	"""
 	A transaction manager object
@@ -19,11 +22,6 @@ class TransactionManager(object):
 		# transactions keyed on transaction name,
 		#		value is the transaction object
 		self.transactions = {}
-
-	def abort_transaction(self,t):
-		t.status = "aborted"
-		for site,access_time in t.sites_accessed:
-			site.dm.process_abort(t)	
 	
 	def num_active_transactions(self):
 		count = 0
@@ -44,12 +42,7 @@ class TransactionManager(object):
 			if transaction.status == "active":
 				return True
 		return False	
-		
-	def update_waiting_transaction(self,t,site):
-		for pa in t.pending_accesses:
-			if pa['site'] == site:
-				t.pending_accesses.remove(pa)
-		
+
 	def locate_read_site(self, var_id):
 		"""
 		locate next active site for variable var_id.
@@ -65,7 +58,17 @@ class TransactionManager(object):
 				return site
 			site = site_list[index]
 		return None
+	
+	def update_waiting_transaction(self,t,site):
+		for pa in t.pending_accesses:
+			if pa['site'] == site:
+				t.pending_accesses.remove(pa)
 
+	def abort_transaction(self,t):
+		t.status = "aborted"
+		for site,access_time in t.sites_accessed:
+			site.dm.process_abort(t)	
+	
 	def attempt_pending_instructions(self):
 		"""
 		attempt to execute all pending instructions
@@ -172,7 +175,7 @@ class TransactionManager(object):
 					# NOTE: need to add loop here to try more sites in case some don't have good version.
 					# also need to cover case that we need to wait for a non-active site
 					val = site.dm.process_ro_read(t,vid)
-					print str(val) + " read from " + site.name
+					print_read_result(val,site,t)
 				
 				else: # if t is read/write, may need to wait
 					flag,val = site.dm.process_rw_read(t,vid)
@@ -180,7 +183,7 @@ class TransactionManager(object):
 					# if read was successful
 					if flag == globalz.Flag.Success:
 						t.add_site_access(site) # add to sites_accessed
-						print str(val) + " read from " + site.name
+						print_read_result(val,site,t)
 					
 					# if read is waiting on a lock
 					elif flag == globalz.Flag.Wait:
