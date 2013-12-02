@@ -249,7 +249,8 @@ class TransactionManager(object):
 					site.active = False
 					for variable in site.variables:
 						if variable.replicated:
-							variable.versions[0].available_for_read = False	
+							for version in variable.versions:
+								version.available_for_read = False
 					print "Site " + a + " failed"
 
 		###################
