@@ -10,6 +10,7 @@ class VariableVersion(object):
 		self.timestamp = ts
 		self.written_by = wb
 		self.is_committed = comm
+		self.available_for_read = True
 
 	def __str__(self):
 		str(self.value)
@@ -17,7 +18,11 @@ class VariableVersion(object):
 	def __repr__(self):
 		string = '{' + str(self.value) + ' @ time ' + str(self.timestamp) + ' by ' + str(self.written_by)
 		if self.is_committed:
-			string += ", committed}"
+			string += ", committed"
 		else:
-			string += ", not committed}"
+			string += ", not committed, "
+		if not self.available_for_read:
+			string += "un"
+		string += "available for read}"
 		return string
+		

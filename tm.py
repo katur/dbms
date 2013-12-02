@@ -41,7 +41,9 @@ class TransactionManager(object):
 		return False	
 		
 	def update_waiting_transaction(self,t,site):
-		t.pending_lock_sites.remove(site)
+		for pa in t.pending_accesses:
+			if pa['site'] == site:
+				t.pending_accesses.remove(pa)
 		
 	def locate_read_site(self, var_id):
 		"""
@@ -128,7 +130,7 @@ class TransactionManager(object):
 					print_warning(i,"transaction previously aborted")
 				#elif t.instruction_buffer:
 				#	print_warning(i,"can't commit due to a buffered instruction")
-				elif len(t.pending_lock_sites) > 0:
+				elif len(t.pending_accesses) > 0:
 					print_warning(i,"can't commit due to a buffered instruction")
 				elif t.is_read_only:
 					t.status = "committed"
@@ -176,7 +178,10 @@ class TransactionManager(object):
 					# if read is waiting on a lock
 					elif flag == globalz.Flag.Wait:
 						t.instruction_buffer = i
-						t.pending_lock_sites.append(site)
+						#t.pending_lock_sites.append(site)
+						t.pending_accesses.append({ 'site':site, 						
+										   'type':'r',
+										   'var':vid })
 						print "Must wait (lock): " + i
 					else: # flag == globalz.Flag.Abort
 						print "Aborting transaction " + t.id + " due to wait-die"
@@ -200,7 +205,11 @@ class TransactionManager(object):
 						# add the site to sites_accessed
 						t.add_site_access(site)
 					elif flag == globalz.Flag.Wait:
-						t.pending_lock_sites.append(site)
+						#t.pending_lock_sites.append(site)
+						t.pending_accesses.append({ 'site':site, 						
+										   'type':'w',
+										   'var':vid,
+										   'value':val })						
 						must_wait = True
 					elif flag == globalz.Flag.Abort:
 						print "Aborting transaction " + t.id + " due to wait-die"
@@ -230,6 +239,9 @@ class TransactionManager(object):
 					print_warning(i, "site already failed")
 				else:
 					site.active = False
+					for variable in site.variables:
+						if variable.replicated:
+							variable.versions[0].available_for_read = False	
 					print "Site " + a + " failed"
 
 		###################
