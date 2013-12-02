@@ -122,9 +122,24 @@ python program.py < input.txt
 
 
 ### Lock Manager object
-lock_table: dictionary keyed on var present at the site, value a lock if there is one at the site
-Handles all locks for this site. Separate notion of shared read lock and exclusive write lock. Implements wait-die by rejecting younger if a lock is held by older (sending a message to TM that transaction is killed), or putting older in a queue if lock is held by younger. Must be able to both access lock state by variable name, but also access all locks for a particular transaction (so that when the transaction ends the LM can find all its locks to release). Whenever a lock is released, LM is responsible for re-assigning the lock if transactions are waiting.
+- lock_table: dictionary keyed on var present at the site, value a lock table entry
+- transaction_locks: list of the transactions holding this lock
+- enqueue_transaction
+- release_locks
+- request_read_lock
+- request_write_lock
+- request_lock
 
-### Lock object
+### Lock Table Entry object
+- var: the var this lock is on
+- lock: 'w' for exclusive, 'r' for shared, 'n' for not locked right now
+- locking_ts: list of transcations currently holding the lock on this var
+- q: queue of QueueEntry objects, i.e., transactions waiting on this lock along with some information regarding the lock request
 
-### Message object
+### Queue Entry object
+- transaction: the transcation waiting
+- r_type: whether read or write
+- value: the value to be written, if any
+
+### Message object (currently called "Flag")
+- Abort, Wait, or Success object based on lock request result
