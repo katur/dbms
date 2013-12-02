@@ -1,5 +1,6 @@
 from variable import Variable
 from variable_version import VariableVersion
+from lm import LockTableEntry
 from globalz import sites, tm
 
 def initialize():
@@ -9,7 +10,8 @@ def initialize():
 		var.versions.append(vers)
 		site.variables[var_name] = var
 		tm.directory[var_name]['sitelist'].append(site)
-		site.dm.lm.lock_table[var_name] = {'lock':'n', 'ts':[]}
+		#site.dm.lm.lock_table[var_name] = {'lock':'n', 'ts':[], 'q':[]}
+		site.dm.lm.lock_table[var_name] = LockTableEntry(var_name)
 	
 	# for each variable, x1 through x20
 	for i in range(1,21):

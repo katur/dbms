@@ -11,6 +11,7 @@ class Transaction(object):
 		self.is_read_only = ro
 		self.instruction_buffer = ""
 		self.sites_accessed = [] # [ ( site, first_access_time) ]
+		self.pending_lock_sites = []
 
 	def __str__(self):
 		return self.id

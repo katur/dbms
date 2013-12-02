@@ -13,6 +13,30 @@ class DataManager(object):
 		self.site = site
 		self.lm = LockManager()
 	
+	# Cycles through each variable in the site, distributing new locks
+	# where available. Transactions receiving locks are updated
+	# by the transaction manager via @tm.update_waiting_transaction.
+	def try_pending(self):
+		for vid in self.site.variables:
+			updates = self.lm.update_queue(vid)
+			# some pending transaction(s) has obtained a shared lock
+			if updates and updates['lock_type'] == 'r':
+				for t in updates['ts']:
+					read_value = None
+					for version in self.site.variables[var].versions:
+						if version.is_committed or version.written_by == t:					
+							read_value = version.value
+							break
+					print( 'Transaction ' + str(t) + 'reads value ' +
+							str(read_value) + ' from ' + self.site.name )
+					globalz.tm.update_waiting_transaction(t,self.site)							
+			# some pending transaction(s) has obtained an exclusive lock
+			elif updates:
+				transaction = updates['ts'][0]
+				val = updates['write_value']
+				print vid + "=" + str(val) + " written at " + self.site.name + " (uncommitted)"							
+				globalz.tm.update_waiting_transaction(transaction,self.site)
+
 	def process_ro_read(self,t,vid):
 		"""
 		Process a read request from the TM
@@ -34,12 +58,12 @@ class DataManager(object):
 			- t: the transaction requesting the read
 			- vid: the variable name to be read
 		"""
-		request_result = self.lm.request_lock(t,vid,'r')
+		request_result = self.lm.request_lock(t,vid,'r',None)
 		
 		if request_result == globalz.Flag.Success:
 			version_list = self.site.variables[vid].versions
 			for version in version_list:
-				if version.is_committed:
+				if version.is_committed or version.written_by == t:
 					return [request_result, version.value]
 				# impossible to have no committed versions,
 				#		since initial versions are committed
@@ -55,8 +79,7 @@ class DataManager(object):
 			- vid: the variable name to be written
 			- val: the value to be written
 		"""
-		request_result = self.lm.request_lock(t,vid,'w')
-		
+		request_result = self.lm.request_lock(t,vid,'w',val)
 		if request_result == globalz.Flag.Success:
 			version_list = self.site.variables[vid].versions
 			
@@ -73,7 +96,8 @@ class DataManager(object):
 			- t: the transaction to be committed.
 		"""
 		var_accessed = self.lm.transaction_locks[t]
-		print str(len(var_accessed)) + " variables accessed to be committed"
+		print( str(len(var_accessed)) + " variables accessed at " +
+			  self.site.name + " to be committed" )
 		for vid in var_accessed:
 			var = self.site.variables[vid]
 			latest_version = var.versions[0] # only need to commit most recent write
