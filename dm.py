@@ -50,7 +50,7 @@ class DataManager(object):
 			# if encounter a version not avilable to read,
 			# there must have been a failure, so no
 			# further version will be acceptable for read
-			if not version.available_to_read:
+			if not version.available_for_read:
 				return None
 
 			if version.timestamp<=t.start_time and version.is_committed:
