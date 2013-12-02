@@ -246,7 +246,7 @@ class TransactionManager(object):
 					print_warning(i, "site already failed")
 				else:
 					site.active = False
-					for variable in site.variables:
+					for variable in site.variables.values():
 						if variable.replicated:
 							for version in variable.versions:
 								version.available_for_read = False
