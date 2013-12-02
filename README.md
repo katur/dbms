@@ -17,17 +17,21 @@ python program.py < input.txt
 ## Design Document
 
 ### Main program
-- initialize the data in the sites, as well as the TM’s directory, per the spec
-- loop inputting a lint at a time from stdin
-- for each line, parse the individual instructions
-- send each instruction to TM to process
+- initialize the data in the sites, as well as the TM's directory, per the spec
+- loop
+	* inputting a line from stdin (skipping if whitespace or a comment)
+	* increment time
+	* try all pending instructions (`site.dm.try\_pending()`)
+	* parse the new input line
+	* send each instructions to the tm to execute (`tm.process\_instruction`)
+- finally, loop until no more pending instructions
 
 ### Globals
-- clock integer
-	* =0 at beginning of program
+- `clock` 
+	* integer initialized to 0
 	* increments with each line of input
-- 1 TM
-- 10 sites
+- `tm`: 1 Transaction Manager object
+- `sites`: list of 10 sites, named `site1` through `site10`
 
 ### Transaction object
 - start_time integer
@@ -40,15 +44,13 @@ python program.py < input.txt
 *Note that Transaction objects must be made accessible to DMs (so DM can access start_time for wait-die and MV)*
 
 ### Transaction\_Manager object
-directory dictionary
-keyed on variable name
-per var, a list with all sites including copies of that var
-per var, a next counter indicating the site (list index) to try next, so that we don’t overuse any one site for reads
-transactions dictionary
-keyed on transaction name.
-Note: at every clock cycle, this list must be iterated to see if any transactions have pending instructions to execute.
-process_instruction function, accepts string, returns nothing
-begin(T) or beginRO(T)
+- directory dictionary
+	* keyed on variable name
+	* per var, a list with all sites including copies of that var
+	* per var, a next counter indicating the site (list index) to try next, so that we don’t overuse any one site for reads
+- transactions dictionary
+	* keyed on transaction name.
+- begin(T) or beginRO(T)
 create transaction with start_time=clock and RO bit set
 end(T)
 for each site in in T.sites_accessed, confirm that its site_activation_time precedes T.start_time. If so, commit T by sending a message to all sites telling them to commit T (described in DM) and printing to console that T committed. If not, abort T by sending a message to all sites telling them to abort T, and printing to console that T aborted due to our available copies algorithm / site x’s failure.
