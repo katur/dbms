@@ -32,7 +32,14 @@ class TransactionManager(object):
 				count += 1
 		return count
 		
-	def transactions_active(self):
+	def has_active_transactions(self):
+		"""
+		returns Boolean of whether there are any 
+			active transactions.
+		used by program.py to cycle through pending
+			instructions at end of program,
+			in case we are given any "partial" transactions.
+		"""
 		for transaction in self.transactions.values( ):
 			if transaction.status == "active":
 				return True

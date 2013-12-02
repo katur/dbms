@@ -36,14 +36,7 @@ while line:
 
 # in case there are still pending instructions
 # continue incrementing clock and attempting them
-while globalz.tm.transactions_active( ):
+while globalz.tm.has_active_transactions( ):
+	globalz.clock += 1
 	for site in globalz.sites:
 		site.dm.try_pending( )
-
-	globalz.clock += 1
-	
-"""
-for loop in range(globalz.tm.num_active_transactions()):
-	globalz.clock += 1
-	globalz.tm.attempt_pending_instructions()
-"""
