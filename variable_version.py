@@ -7,9 +7,9 @@ class VariableVersion(object):
 	"""
 	def __init__(self, val, ts, wb, comm=False):
 		self.value = val
-		self.timestamp = ts
 		self.written_by = wb
 		self.is_committed = comm
+		self.time_committed = ts
 		self.available_for_read = True
 
 	def __str__(self):

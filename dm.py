@@ -56,7 +56,7 @@ class DataManager(object):
 			if not version.available_for_read:
 				return None
 
-			if version.timestamp<=t.start_time and version.is_committed:
+			if version.time_committed<=t.start_time and version.is_committed:
 				return version.value
 		return None
 
@@ -93,8 +93,9 @@ class DataManager(object):
 		if request_result == globalz.Message.success:
 			version_list = self.site.variables[vid].versions
 			
-			# create new version and insert at the beginning of the list
-			new_version = VariableVersion(val,globalz.clock,t,False)
+			# create new (uncommitted) version 
+			#		and insert at the beginning of the list
+			new_version = VariableVersion(val,None,t,False)
 			version_list.insert(0,new_version)
 			print vid + "=" + str(val) + " written at " + self.site.name + " (uncommitted)"
 		return request_result
@@ -112,7 +113,7 @@ class DataManager(object):
 			var = self.site.variables[vid]
 			# ??? is below necessarily from a write ? if a read, could be committing crap
 			latest_version = var.versions[0] # only need to commit most recent write
-			latest_version.timestamp = globalz.clock
+			latest_version.time_committed = globalz.clock
 			latest_version.is_committed = True
 		self.lm.release_locks(t)
 		
