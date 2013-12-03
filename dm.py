@@ -25,7 +25,7 @@ class DataManager(object):
 			# some pending transaction(s) has obtained a shared lock
 			if updates and updates['lock_type'] == 'r':
 				for t in updates['ts']:
-					val = read_version_for_rw(self,t,vid)
+					val = self.read_version_for_rw(t,vid)
 					if val:
 						globalz.print_read_result(val,site,t)
 					globalz.tm.update_waiting_transaction(t,self.site)							
@@ -79,7 +79,7 @@ class DataManager(object):
 			- t: the read-only transaction
 			- vid: the variable name to be read
 		"""
-		read_version_for_ro(self,t,vid)
+		self.read_version_for_ro(t,vid)
 
 
 	def process_rw_read(self,t,vid):
@@ -93,7 +93,7 @@ class DataManager(object):
 		request_result = self.lm.request_lock(t,vid,'r',None)
 		
 		if request_result == globalz.Message.success:
-			read_result = read_version_for_rw(self,t,vid)
+			read_result = self.read_version_for_rw(t,vid)
 			return [request_result, version.value]
 		
 		else: # read not achieved
