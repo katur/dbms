@@ -10,8 +10,18 @@ class Transaction(object):
 		self.start_time = globalz.clock
 		self.is_read_only = ro
 		self.instruction_buffer = ""
-		self.sites_accessed = [] # [ ( site, first_access_time) ]
 		self.pending_accesses = []
+		if self.is_read_only:
+			# Impossible_sites is a list of sites attempted
+			#		and deemed impossible to read from (while active)
+			#		for a RO transaction to perform its current read.
+			#		This is to cover corner sites that ALL sites
+			#		have failed since RO started, so no version exists
+			#		and the transaction should abort.
+			#	Note: must clear impossible sites every RO read.
+			self.impossible_sites = []
+		else:
+			self.sites_accessed = [] # [ ( site,first_access_time ) ], for avail copies
 
 	def __str__(self):
 		return self.id

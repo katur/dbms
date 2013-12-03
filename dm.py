@@ -52,10 +52,14 @@ class DataManager(object):
 			if not v.available_for_read:
 				return None
 			
+			# read-only looks for most recent committed before t began
 			if t.is_read_only and v.is_committed and v.time_committed<=t.start_time:
 				return v.value
+
+			# read-write looks for most recent committed or written by itself
 			if not t.is_read_only and (v.is_committed or v.written_by==t):
 				return v.value
+
 		# if applicable version not found, return None
 		return None
 

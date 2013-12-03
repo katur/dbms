@@ -4,7 +4,8 @@ import globalz
 from transaction import Transaction
 
 def print_warning(instruction, reason):
-	print 'ERROR: ignoring instruction "' + instruction + '"; ' + reason
+	print 'ERROR: ignoring instruction "' + instruction + \
+		'"; ' + reason
 
 class TransactionManager(object):
 	"""
@@ -19,7 +20,8 @@ class TransactionManager(object):
 		# transactions keyed on transaction name,
 		#		value is the transaction object
 		self.transactions = {}
-	
+
+
 	# might lose the following
 	def update_waiting_transaction(self,t,site):
 		for pa in t.pending_accesses:
@@ -32,7 +34,8 @@ class TransactionManager(object):
 			if transaction.status == "active":
 				count += 1
 		return count
-		
+
+
 	def has_active_transactions(self):
 		"""
 		returns Boolean of whether there are any 
@@ -46,32 +49,59 @@ class TransactionManager(object):
 				return True
 		return False	
 
+
 	def locate_read_site(self,t,vid):
 		"""
 		Locate next active site with applicable read
 			for transaction t reading variable var_id.
 		Returns None if no active sites are found.
 		"""
+		# start with "next" position (stored in dir)
 		site_list = self.directory[vid]['sitelist']
 		index = self.directory[vid]['next']
 		site = site_list[index]
 
 		# for each possible site, see if it has
-		#		a var that is both active and avail to read
-		#		depending on if for ro or rw
+		#		a var that is both active and capable
+		#		of being read by the transaction
 		for loop in range(len(site_list)+1):
-			index = (index+1) % len(site_list)		
+			# get next index and reset "next" field
+			index = (index+1) % len(site_list)
 			self.directory[vid]['next'] = index
-			if site.active and site.dm.get_read_version(t,vid):
+
+			# try to get a read version
+			read_result = site.dm.get_read_version(t,vid)
+
+			# if site active with a read, return it
+			if site.active and read_result:
 				return site
+			
+			# if site active w/o a read and RO transaction,
+			#		then update the t.impossible_sites
+			#		and if this makes all sites impossible,
+			#		abort the transaction
+			elif t.is_read_only and not read_result:
+				if site.name not in t.impossible_sites:
+					t.impossible_sites.append(site.name)
+					if len(t.impossible_sites) == 10:
+						self.abort_transaction(t)
+						print "Aborted Read-Only " + str(t) + \
+							" since all sites deemed impossible to read from" + \
+							"(all versions are too old)"
+						return None
+			
+			# increment to next index
 			site = site_list[index]
 		return None
-	
+
+
 	def abort_transaction(self,t):
 		t.status = "aborted"
-		for site,access_time in t.sites_accessed:
-			site.dm.process_abort(t)	
-	
+		if not t.is_read_only:
+			for site,access_time in t.sites_accessed:
+				site.dm.process_abort(t)	
+
+
 	def attempt_pending_instructions(self):
 		"""
 		attempt to execute all unstarted, pending instructions
@@ -139,7 +169,8 @@ class TransactionManager(object):
 				elif len(t.pending_accesses) > 0:
 					print_warning(i,"can't commit due to a buffered instruction")
 				
-				elif t.is_read_only: # nothing to do for RO on commit!
+				elif t.is_read_only and t.status=="active": 
+					# not much to do for RO on commit!
 					t.status = "committed"
 					print "Committed RO transaction " + a
 				
@@ -148,7 +179,8 @@ class TransactionManager(object):
 					for site,access_time in t.sites_accessed:
 						# if some site hasn't been up, abort
 						if not site.active or site.activation_time > access_time:
-							print "Aborting transaction " + t.id + " due to avail copies algo"
+							print "Aborting transaction " + t.id + \
+								" due to avail copies algo"
 							self.abort_transaction(t)
 							return
 
@@ -170,11 +202,15 @@ class TransactionManager(object):
 			#		for reading w/approprate timestamp)
 			site = self.locate_read_site(t,vid)
 			
-			if not site: # if no applicable site was found
-				print "Must wait: no active site with applicable version found for read"
-				t.instruction_buffer = i
+			if not site:
+				if t.status=="active": # if no applicable site found
+					t.instruction_buffer = i
+					print "Must wait: no active site with applicable " + \
+						"version found for read"
+				elif t.status=="aborted":
+					pass
 
-			else: # if active site found
+			else: # if active+applicable site found
 				if t.is_read_only: # will succeed regardless in this step
 					val = site.dm.process_ro_read(t,vid)
 					globalz.print_read_result(val,site,t)
@@ -189,12 +225,13 @@ class TransactionManager(object):
 					# if read is waiting on a lock
 					elif flag == globalz.Message.wait:
 						t.instruction_buffer = i
-						#t.pending_lock_sites.append(site)
 						t.pending_accesses.append({ 'site':site, 						
 										   'type':'r',
 										   'var':vid })
 						print "Must wait (lock): " + i
-					else: # flag == globalz.Message.Abort
+					
+					# if die due to wait die
+					else: # (flag == globalz.Message.Abort)
 						print "Aborting transaction " + t.id + " due to wait-die"
 						self.abort_transaction(t)
 				
@@ -222,7 +259,7 @@ class TransactionManager(object):
 						print "Aborting transaction " + t.id + " due to wait-die"
 						self.abort_transaction(t)
 						return
-					# note, if success, handled within the dm
+					# NOTE: if success, handled within the dm
 
 				else:
 					num_active -= 1					
@@ -290,7 +327,8 @@ class TransactionManager(object):
 		elif re.match("^dump\(x\d*\)", i):
 			print "Dump of variable " + a + ":"
 			for site in self.directory[a]['sitelist']:
-				print site.name + ":" + str(site.variables[a].get_committed_version().value)
+				print site.name + ":" + \
+					str(site.variables[a].get_committed_version().value)
 
 		elif re.match("^querystate\(\)", i):
 			print "transactions in tm:"

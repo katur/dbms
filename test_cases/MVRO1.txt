@@ -1,0 +1,16 @@
+// T1 should not be be able to perform the read due to all sites being failed.
+// it should actually abort, since it is clear no site will ever work.
+	
+beginRO(T1)
+fail(1)
+fail(2)
+fail(3)
+fail(4)
+fail(5)
+fail(6)
+fail(7)
+fail(8)
+fail(9)
+fail(10)
+R(T1,x2)
+end(T1)
