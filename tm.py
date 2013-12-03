@@ -195,6 +195,7 @@ class TransactionManager(object):
 			t = self.transactions[tid]
 			if t.instruction_buffer:
 				print_warning(i,"new instruction received while one pending")
+				return
 
 			# find a site that is both active and applicable for the read
 			#		(i.e., has a committed version avail 
@@ -207,7 +208,7 @@ class TransactionManager(object):
 						"version found for read"
 					t.add_unstarted_transaction_to_buffer(i)
 				elif t.status=="aborted":
-					pass
+					pass # abortion was handled in locate_read_site
 
 			else: # if active+applicable site found
 				if t.is_read_only: # will succeed regardless in this step
@@ -241,7 +242,6 @@ class TransactionManager(object):
 			
 			site_list = self.directory[vid]['sitelist']
 			num_active = len(site_list)
-			must_wait = False
 			for site in site_list:
 				if site.active:
 					flag = site.dm.process_write(t,vid,val)
@@ -315,9 +315,8 @@ class TransactionManager(object):
 					site.activation_time = globalz.clock 
 					print "Site " + a + " recovered"
 					#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-					# here, have to add to recovered,
-					# pending site to replicated,
-					# in-progress writes
+					# here, have to add the recovered,
+					# pending site to replicated, in-progress writes
 					#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		###########

@@ -85,6 +85,11 @@ class Transaction(object):
 		self.instruction_in_progress = False
 		self.sites_in_progress = []
 
+	def reset_buffer(self):
+		self.instruction_buffer = ""
+		self.instruction_in_progress = False
+		self.sites_in_progress = []
+
 	def grant_lock(self,site):
 		"""
 		update a transaction's sites_in_progress

@@ -59,6 +59,7 @@ class DataManager(object):
 		"""
 		read_result = self.get_read_version(t,vid)
 		self.print_read_result(t,read_result)
+		t.reset_buffer()
 		return read_result
 
 	
@@ -77,6 +78,7 @@ class DataManager(object):
 		# if there was a result, print it
 		if read_result:
 			self.print_read_result(t,read_result)
+			t.reset_buffer()
 		
 		return read_result # might be None
 	
