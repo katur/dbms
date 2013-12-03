@@ -6,9 +6,13 @@ class LockManager(object):
 	
 	"""
 	def __init__(self):
-		self.lock_table = {}
-		self.transaction_locks = {}			
+		# lock table: keyed on var; value is lock table entry
+		self.lock_table = {} 
 		
+		# transaction_locks: keyed on transaction; 
+		#		value list of vars it has locked at this site
+		self.transaction_locks = {}
+
 	def update_queue(self,vid):
 		lt_entry = self.lock_table[vid]
 		if lt_entry.lock == 'n' and len(lt_entry.q) > 0:

@@ -123,7 +123,7 @@ python program.py < input.txt
 
 ### Lock Manager object
 - lock_table: dictionary keyed on var present at the site, value a lock table entry
-- transaction_locks: list of the transactions holding this lock
+- transaction_locks: dictionary keyed on transactions holding locks at this site, value a list of the vars the transaction has locks on at this site.
 - enqueue_transaction
 - release_locks
 - request_read_lock
@@ -141,5 +141,5 @@ python program.py < input.txt
 - r_type: whether read or write
 - value: the value to be written, if any
 
-### Message object (currently called "Flag")
-- Abort, Wait, or Success object based on lock request result
+### Message object
+- Abort, Wait, or Success based on lock request result
