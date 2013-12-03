@@ -163,13 +163,13 @@ class TransactionManager(object):
 				print_warning(i,"transaction does not exist")
 			else:
 				t = self.transactions[a]
-				if t.status is "committed":
+				if t.instruction_buffer:
+					print_warning(i,"can't commit due to a buffered instruction")
+					
+				elif t.status is "committed":
 					print_warning(i,"transaction previously committed")
 				elif t.status is "aborted":
 					print_warning(i,"transaction previously aborted")
-				
-				elif t.instruction_buffer:
-					print_warning(i,"can't commit due to a buffered instruction")
 				
 				elif t.is_read_only and t.status=="active": 
 					# not much to do for RO on commit!
@@ -193,6 +193,8 @@ class TransactionManager(object):
 		elif re.match("^R\(.+\,.+\)", i):
 			tid,vid = [x.strip() for x in a.split(',')]
 			t = self.transactions[tid]
+			if t.instruction_buffer:
+				print_warning(i,"new instruction received while one pending")
 
 			# find a site that is both active and applicable for the read
 			#		(i.e., has a committed version avail 
@@ -209,7 +211,8 @@ class TransactionManager(object):
 
 			else: # if active+applicable site found
 				if t.is_read_only: # will succeed regardless in this step
-					val = site.dm.process_ro_read(t,vid)
+					site.dm.process_ro_read(t,vid)
+					# NOTE: printing handled by the dm
 				
 				else: # if t is read/write, may need to wait
 					flag,val = site.dm.process_rw_read(t,vid)
@@ -233,6 +236,8 @@ class TransactionManager(object):
 			tid,vid,val = [x.strip() for x in a.split(',')]
 			val = int(val)
 			t = self.transactions[tid]			
+			if t.instruction_buffer:
+				print_warning(i,"new instruction received while one pending")
 			
 			site_list = self.directory[vid]['sitelist']
 			num_active = len(site_list)
@@ -241,7 +246,7 @@ class TransactionManager(object):
 				if site.active:
 					flag = site.dm.process_write(t,vid,val)
 					if flag == globalz.Message.wait:
-						print "waiting on lock at site " + \
+						print "Waiting on lock at site " + \
 							str(site)
 						t.add_started_instruction_to_buffer(i,site)
 					
