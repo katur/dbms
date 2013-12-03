@@ -21,11 +21,12 @@ class TransactionManager(object):
 		#		value is the transaction object
 		self.transactions = {}
 
-
+	'''
 	def update_waiting_transaction(self,t,site):
 		for pa in t.pending_accesses:
 			if pa['site'] == site:
 				t.pending_accesses.remove(pa)
+	'''
 
 	def num_active_transactions(self):
 		count = 0
@@ -101,18 +102,18 @@ class TransactionManager(object):
 				site.dm.process_abort(t)	
 
 
-	def attempt_pending_instructions(self):
+	def attempt_unstarted_buffered_instructions(self):
 		"""
 		attempt to execute all unstarted, pending instructions
 		of active transactions
 		"""
 		ts = self.transactions.values()
 		for t in ts:
-			if t.status is "active" and t.instruction_buffer:
+			if t.status is "active" and t.instruction_buffer and not t.instruction_in_progress:
 				i = t.instruction_buffer # save instruction
 				t.instruction_buffer = "" # reset buffer
-				# note: above step okay because if instruction 
-				#   still pending, processing will refill the buffer
+				# NOTE: processing may refill the buffer
+				
 				print "Attempting buffered '" + i + "' for transaction " + t.id
 				self.process_instruction(i)
 				
@@ -162,11 +163,7 @@ class TransactionManager(object):
 				elif t.status is "aborted":
 					print_warning(i,"transaction previously aborted")
 				
-				#elif t.instruction_buffer:
-				#	print_warning(i,"can't commit due to a buffered instruction")
-				
-				# might lose the following
-				elif len(t.pending_accesses) > 0:
+				elif t.instruction_buffer:
 					print_warning(i,"can't commit due to a buffered instruction")
 				
 				elif t.is_read_only and t.status=="active": 
@@ -175,7 +172,8 @@ class TransactionManager(object):
 					print "Committed RO transaction " + a
 				
 				else: # t is read-write
-					# make sure all sites are up now, and have been up
+					# make sure all sites are up now, 
+					#		and have been up
 					for site,access_time in t.sites_accessed:
 						# if some site hasn't been up, abort
 						if not site.active or site.activation_time > access_time:
@@ -203,7 +201,7 @@ class TransactionManager(object):
 			site = self.locate_read_site(t,vid)
 			
 			if not site:
-				if t.status=="active": # if no applicable site found
+				if t.status=="active": # if no ready site found
 					print "Must wait: no active site with applicable " + \
 						"version found for read"
 					t.instruction_buffer = i
@@ -226,13 +224,13 @@ class TransactionManager(object):
 					elif flag == globalz.Message.wait:
 						print "Must wait (lock): " + i
 						t.instruction_buffer = i
-						t.pending_accesses.append({ 'site':site, 						
-										   'type':'r',
-										   'var':vid })
+						t.instruction_in_progress = True
+						t.sites_in_progress.append(site)
 
 					# if die due to wait die
 					else: # (flag == globalz.Message.Abort)
-						print "Aborting transaction " + t.id + " due to wait-die"
+						print "Aborting transaction " + \
+							t.id + " due to wait-die"
 						self.abort_transaction(t)
 				
 		############
@@ -250,26 +248,26 @@ class TransactionManager(object):
 				if site.active:
 					flag = site.dm.process_write(t,vid,val)
 					if flag == globalz.Message.wait:
-						t.pending_accesses.append({ 'site':site, 						
-										   'type':'w',
-										   'var':vid,
-										   'value':val })						
-						must_wait = True
+						print "waiting on lock at site " + \
+							str(site)
+						t.instruction_buffer = i
+						t.instruction_in_progress = True
+						t.sites_in_progress.append(site)
+					
 					elif flag == globalz.Message.abort:
-						print "Aborting transaction " + t.id + " due to wait-die"
+						print "Aborting transaction " + \
+							t.id + " due to wait-die"
 						self.abort_transaction(t)
 						return
-					# NOTE: if success, handled within the dm
+					# NOTE: success handled within dm
 
 				else:
 					num_active -= 1					
 			
 			if num_active == 0:
-				print "Must wait: no active site found for write"
+				print "Must wait: no active site for write"
 				t.instruction_buffer = i
-			elif must_wait:
-				print "Must wait for some locks"
-				t.instruction_buffer = i
+
 
 		################
 		# IF FAIL SITE #
@@ -286,7 +284,8 @@ class TransactionManager(object):
 					# set site to failed
 					site.active = False
 
-					# mark all replicated vars unavailable for read
+					# mark all replicated vars 
+					#		unavailable for read
 					for variable in site.variables.values():
 						if globalz.var_is_replicated(variable.name):
 							for version in variable.versions:
@@ -295,6 +294,16 @@ class TransactionManager(object):
 					# reset the lock table
 					site.dm.lm.reset_lock_table()
 					print "Site " + a + " failed"
+					
+					# ~~~~~~~~~~~~~~~~~~~~~~~~
+					# here, need to remove the site
+					# from transactions with in-progress
+					# read or write at the site,
+					# possibly setting to no longer in
+					# progress / to be started over
+					# at clock tick, or for replicated writes,
+					# seeing if the site list is empty
+					# ~~~~~~~~~~~~~~~~~~~~~~~~
 
 		###################
 		# IF RECOVER SITE #
@@ -311,8 +320,11 @@ class TransactionManager(object):
 					site.active = True
 					site.activation_time = globalz.clock 
 					print "Site " + a + " recovered"
-					# here, have to trigger finding ts in write interim
-					# that need more sites?
+					#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					# here, have to add to recovered,
+					# pending site to replicated,
+					# in-progress writes
+					#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		###########
 		# IF DUMP #
