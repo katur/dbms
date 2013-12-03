@@ -21,12 +21,6 @@ class TransactionManager(object):
 		#		value is the transaction object
 		self.transactions = {}
 
-	'''
-	def update_waiting_transaction(self,t,site):
-		for pa in t.pending_accesses:
-			if pa['site'] == site:
-				t.pending_accesses.remove(pa)
-	'''
 
 	def num_active_transactions(self):
 		count = 0
@@ -99,8 +93,7 @@ class TransactionManager(object):
 		t.status = "aborted"
 		if not t.is_read_only:
 			for site,access_time in t.sites_accessed:
-				site.dm.process_abort(t)	
-
+				site.dm.process_abort(t)
 
 	def attempt_unstarted_buffered_instructions(self):
 		"""
@@ -112,12 +105,13 @@ class TransactionManager(object):
 			if t.status is "active" and t.instruction_buffer and not t.instruction_in_progress:
 				i = t.instruction_buffer # save instruction
 				t.instruction_buffer = "" # reset buffer
-				# NOTE: processing may refill the buffer
+				# NOTE: buffer will get re-filled if instruction
+					# still can't start
 				
 				print "Attempting buffered '" + i + "' for transaction " + t.id
 				self.process_instruction(i)
-				
-	
+
+
 	def process_instruction(self, i):
 		"""
 		Process an input instruction
@@ -204,7 +198,7 @@ class TransactionManager(object):
 				if t.status=="active": # if no ready site found
 					print "Must wait: no active site with applicable " + \
 						"version found for read"
-					t.instruction_buffer = i
+					t.add_unstarted_transaction_to_buffer(i)
 				elif t.status=="aborted":
 					pass
 
@@ -223,9 +217,7 @@ class TransactionManager(object):
 					# if read is waiting on a lock
 					elif flag == globalz.Message.wait:
 						print "Must wait (lock): " + i
-						t.instruction_buffer = i
-						t.instruction_in_progress = True
-						t.sites_in_progress.append(site)
+						t.add_started_instruction_to_buffer(i,site)
 
 					# if die due to wait die
 					else: # (flag == globalz.Message.Abort)
@@ -250,9 +242,7 @@ class TransactionManager(object):
 					if flag == globalz.Message.wait:
 						print "waiting on lock at site " + \
 							str(site)
-						t.instruction_buffer = i
-						t.instruction_in_progress = True
-						t.sites_in_progress.append(site)
+						t.add_started_instruction_to_buffer(i,site)
 					
 					elif flag == globalz.Message.abort:
 						print "Aborting transaction " + \
@@ -266,7 +256,7 @@ class TransactionManager(object):
 			
 			if num_active == 0:
 				print "Must wait: no active site for write"
-				t.instruction_buffer = i
+				t.add_unstarted_instruction_to_buffer(i)
 
 
 		################
