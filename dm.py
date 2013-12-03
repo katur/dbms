@@ -100,7 +100,7 @@ class DataManager(object):
 		else: # read not achieved yet, so let TM know why
 			return [request_result, None]
 	
-	def apply_write(self,t,vid,val):
+	def apply_write(self,t,vid,val):	
 		# add the site to sites_accessed
 		t.add_site_access(self.site)
 
@@ -139,7 +139,7 @@ class DataManager(object):
 		for vid in var_accessed:
 			var = self.site.variables[vid]
 			latest_version = var.versions[0] # only need to commit most recent write
-			if latest_version.written_by(t):
+			if latest_version.written_by == t:
 				latest_version.time_committed = globalz.clock
 				latest_version.is_committed = True
 		self.lm.release_locks(t)

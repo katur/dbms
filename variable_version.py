@@ -13,7 +13,7 @@ class VariableVersion(object):
 		self.available_for_read = True
 
 	def __str__(self):
-		str(self.value)
+		return str(self.value)
 	
 	def __repr__(self):
 		string = '{' + str(self.value) + ' @ time ' + \

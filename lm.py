@@ -79,13 +79,15 @@ class LockManager(object):
 	
 	def update_queue(self,var):
 		q = self.lock_table[var].q
-		if len(q) > 0:
+		if len(q) == 0:
+			return	
 		# pending transaction(s) requests shared lock
 		if q[0].r_type == 'r':
 			self.lock_table[var].lock = 'r' # apply shared lock to var
 			while q[0].r_type == 'r':				
 				q_entry = q.pop( ) # pop t from queue
 				t = q_entry.transaction
+				print 'assigning shared lock on ' + var + ' to ' + str(t)
 				self.lock_table[var].locking_ts.append(t) # assign shared lock to t
 				self.transaction_locks[t].append(var) # assign shared lock to t
 				self.dm.do_read(t,var) # get and print read result
@@ -95,7 +97,10 @@ class LockManager(object):
 			self.lock_table[var].lock = 'w' # apply exclusive lock to var
 			q_entry = q.pop( )# pop t from queue
 			t = q_entry.transaction
+			print 'assigning exclusive lock on ' + var + ' to ' + str(t)			
 			self.lock_table[var].locking_ts = [t] # assign exclusive lock to t	
+			if not t in self.transaction_locks:
+				self.transaction_locks[t] = []
 			self.transaction_locks[t].append(var) # assign exclusive lock to t	
 			val = q_entry.value 
 			self.dm.apply_write(t,var,val) # apply write and print result to console
@@ -125,7 +130,7 @@ class LockManager(object):
 		held by t.
 		"""
 		for var in self.transaction_locks[t]:
-			print "releasing a lock on " + vid
+			print "releasing a lock on " + var
 			self.lock_table[var].locking_ts.remove(t)
 			if len(self.lock_table[var].locking_ts)==0:
 				self.lock_table[var].lock = 'n'
