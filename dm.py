@@ -24,7 +24,7 @@ class DataManager(object):
 				for t in updates['ts']:
 					read_value = None
 					for version in self.site.variables[var].versions:
-						if version.is_committed or version.written_by == t:					
+						if (version.is_committed and version.available_for_read) or version.written_by == t:					
 							read_value = version.value
 							break
 					print( 'Transaction ' + str(t) + 'reads value ' +
@@ -56,7 +56,7 @@ class DataManager(object):
 			if not version.available_for_read:
 				return None
 
-			if version.time_committed<=t.start_time and version.is_committed:
+			if version.is_committed and version.time_committed<=t.start_time:
 				return version.value
 		return None
 
@@ -71,15 +71,18 @@ class DataManager(object):
 		request_result = self.lm.request_lock(t,vid,'r',None)
 		
 		if request_result == globalz.Message.success:
-			version_list = self.site.variables[vid].versions
-			for version in version_list:
-				if version.is_committed or version.written_by == t:
-					return [request_result, version.value]
-				# impossible to have no committed versions,
-				#		since initial versions are committed
+			read_result = read_correct_versino_for_rw(self,t,vid)
+			return [request_result, version.value]
 		
 		else: # read not achieved
 			return [request_result,None]
+	
+	def read_correct_version_for_rw(self,t,vid):
+		version_list = self.site.variables[vid].versions
+		for version in version_list:
+			if (version.is_committed and version.available_for_read) or version.written_by==t:
+				return version.value
+		return None
 	
 	def process_write(self,t,vid,val):
 		"""

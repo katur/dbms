@@ -4,7 +4,7 @@ import globalz
 from transaction import Transaction
 
 def print_warning(instruction, reason):
-	print 'Warning, ignoring instruction "' + instruction + '": ' + reason
+	print 'ERROR: ignoring instruction "' + instruction + '"; ' + reason
 
 class TransactionManager(object):
 	"""
