@@ -79,7 +79,7 @@ class DataManager(object):
 			- t: the read-only transaction
 			- vid: the variable name to be read
 		"""
-		self.read_version_for_ro(t,vid)
+		return self.read_version_for_ro(t,vid)
 
 
 	def process_rw_read(self,t,vid):
@@ -94,10 +94,10 @@ class DataManager(object):
 		
 		if request_result == globalz.Message.success:
 			read_result = self.read_version_for_rw(t,vid)
-			return [request_result, version.value]
+			return [request_result, read_result]
 		
-		else: # read not achieved
-			return [request_result,None]
+		else: # read not achieved yet
+			return [request_result, None]
 	
 
 	def process_write(self,t,vid,val):
