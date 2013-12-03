@@ -17,8 +17,8 @@ while line:
 		globalz.clock += 1 # advance time by 1
 		print "----- time " + str(globalz.clock) + " -----"
 	
-		# re-try all pending instructions
-		# globalz.tm.attempt_pending_instructions()
+		# re-try unstarted pending instructions
+		globalz.tm.attempt_unstarted_buffered_instructions()
 		
 		for site in globalz.sites:
 			site.dm.try_pending( )		
