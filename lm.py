@@ -121,8 +121,7 @@ class LockManager(object):
 			q_entry.t.start_time < t.start_time):
 				return False
 		lt_entry.q.append(QueueEntry(t,r_type,val))
-		return True
-		
+		return True		
 	
 	def release_locks(self,t):
 		"""

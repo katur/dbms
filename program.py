@@ -19,9 +19,6 @@ while line:
 	
 		# re-try unstarted pending instructions
 		globalz.tm.attempt_unstarted_buffered_instructions()
-		
-		#for site in globalz.sites:
-		#	site.dm.try_pending( )		
 	
 		print ">>" + line.strip()
 
