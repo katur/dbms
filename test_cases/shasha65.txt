@@ -1,7 +1,5 @@
 // Test 6
-// T1 ok. T2 ok. T2 reads from a recovering site, but odd variables only
-// at that site
-
+// T1 ok. T2 abort at commit time
 begin(T1)
 begin(T2)
 fail(3); fail(4)
@@ -9,5 +7,7 @@ R(T1,x1)
 W(T2,x8,88)
 end(T1)
 recover(4); recover(3)
+R(T2,x4)
 R(T2,x3)
+R(T2, x8)
 end(T2)

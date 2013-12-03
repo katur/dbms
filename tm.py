@@ -4,66 +4,106 @@ import globalz
 from transaction import Transaction
 
 def print_warning(instruction, reason):
-	print 'Warning, ignoring instruction "' + instruction + '": ' + reason
+	print 'ERROR: ignoring instruction "' + instruction + \
+		'"; ' + reason
 
 class TransactionManager(object):
 	"""
 	A transaction manager object
 	"""
 	def __init__(self):
-		self.directory = {}
+		# directory keyed on variable name
+		# directory[var]['sitelist']: list of sites w/this variable
+		# directory[var]['next']: the next site to try
+		self.directory = {} 
+		
+		# transactions keyed on transaction name,
+		#		value is the transaction object
 		self.transactions = {}
 
-	def print_directory(self):
-		print "tm's variable directory:"
-		pprint(self.directory)
 
-	def print_transactions(self):
-		print "tm's transaction directory:"
-		pprint(self.transactions)
-		
-	def abort_transaction(self,t):
-		t.status = "aborted"
-		for site,access_time in t.sites_accessed:
-			site.dm.process_abort(t)	
-	
+	def update_waiting_transaction(self,t,site):
+		for pa in t.pending_accesses:
+			if pa['site'] == site:
+				t.pending_accesses.remove(pa)
+
 	def num_active_transactions(self):
 		count = 0
 		for transaction in self.transactions.values():
 			if transaction.status == "active":
 				count += 1
 		return count
-		
-	def transactions_active(self):
+
+
+	def has_active_transactions(self):
+		"""
+		returns Boolean of whether there are any 
+			active transactions.
+		used by program.py to cycle through pending
+			instructions at end of program,
+			in case we are given any "partial" transactions.
+		"""
 		for transaction in self.transactions.values( ):
 			if transaction.status == "active":
 				return True
 		return False	
-		
-	def update_waiting_transaction(self,t,site):
-		for pa in t.pending_accesses:
-			if pa['site'] == site:
-				t.pending_accesses.remove(pa)
-		
-	def locate_read_site(self, var_id):
+
+
+	def locate_read_site(self,t,vid):
 		"""
-		locate next active site for variable var_id.
-		returns None if no active sites are found.
+		Locate next active site with applicable read
+			for transaction t reading variable var_id.
+		Returns None if no active sites are found.
 		"""
-		site_list = self.directory[var_id]['sitelist']
-		index = self.directory[var_id]['next']
-		site = site_list[index]	
+		# start with "next" position (stored in dir)
+		site_list = self.directory[vid]['sitelist']
+		index = self.directory[vid]['next']
+		site = site_list[index]
+
+		# for each possible site, see if it has
+		#		a var that is both active and capable
+		#		of being read by the transaction
 		for loop in range(len(site_list)+1):
-			index = (index+1) % len(site_list)		
-			self.directory[var_id]['next'] = index
-			if site.active:
+			# get next index and reset "next" field
+			index = (index+1) % len(site_list)
+			self.directory[vid]['next'] = index
+
+			# try to get a read version
+			read_result = site.dm.get_read_version(t,vid)
+
+			# if site active with a read, return it
+			if site.active and read_result:
 				return site
+			
+			# if site active w/o a read and RO transaction,
+			#		then update the t.impossible_sites
+			#		and if this makes all sites impossible,
+			#		abort the transaction
+			elif t.is_read_only and not read_result:
+				if site.name not in t.impossible_sites:
+					t.impossible_sites.append(site.name)
+					if len(t.impossible_sites) == 10:
+						self.abort_transaction(t)
+						print "Aborted Read-Only " + str(t) + \
+							" since all sites deemed impossible to read from" + \
+							"(all versions are too old)"
+						return None
+			
+			# increment to next index
 			site = site_list[index]
 		return None
 
+
+	def abort_transaction(self,t):
+		t.status = "aborted"
+		if not t.is_read_only:
+			for site,access_time in t.sites_accessed:
+				site.dm.process_abort(t)	
+
+
 	def attempt_pending_instructions(self):
 		"""
-		attempt to execute all pending instructions
+		attempt to execute all unstarted, pending instructions
 		of active transactions
 		"""
 		ts = self.transactions.values()
@@ -76,14 +116,7 @@ class TransactionManager(object):
 				print "Attempting buffered '" + i + "' for transaction " + t.id
 				self.process_instruction(i)
 				
-	"""
-	def check_pending_instructions(self):
-		for t in self.transactions.values( ):
-			if len(t.pending_lock_sites) > 0:
-				return True
-		return False				
-	"""
-
+	
 	def process_instruction(self, i):
 		"""
 		Process an input instruction
@@ -128,19 +161,26 @@ class TransactionManager(object):
 					print_warning(i,"transaction previously committed")
 				elif t.status is "aborted":
 					print_warning(i,"transaction previously aborted")
+				
 				#elif t.instruction_buffer:
 				#	print_warning(i,"can't commit due to a buffered instruction")
+				
+				# might lose the following
 				elif len(t.pending_accesses) > 0:
 					print_warning(i,"can't commit due to a buffered instruction")
-				elif t.is_read_only:
+				
+				elif t.is_read_only and t.status=="active": 
+					# not much to do for RO on commit!
 					t.status = "committed"
 					print "Committed RO transaction " + a
-				else:
-					# make sure all sites have been up
+				
+				else: # t is read-write
+					# make sure all sites are up now, and have been up
 					for site,access_time in t.sites_accessed:
 						# if some site hasn't been up, abort
-						if site.activation_time > access_time:
-							print "Aborting transaction " + t.id + " due to avail copies algo"
+						if not site.active or site.activation_time > access_time:
+							print "Aborting transaction " + t.id + \
+								" due to avail copies algo"
 							self.abort_transaction(t)
 							return
 
@@ -156,34 +196,42 @@ class TransactionManager(object):
 		elif re.match("^R\(.+\,.+\)", i):
 			tid,vid = [x.strip() for x in a.split(',')]
 			t = self.transactions[tid]
-			site = self.locate_read_site(vid)
-			
-			if not site: # if no active site was found
-				print "Must wait: no active site found for read"
-				t.instruction_buffer = i
 
-			else: # if active site found
-				if t.is_read_only: # will succeed regardless
+			# find a site that is both active and applicable for the read
+			#		(i.e., has a committed version avail 
+			#		for reading w/approprate timestamp)
+			site = self.locate_read_site(t,vid)
+			
+			if not site:
+				if t.status=="active": # if no applicable site found
+					print "Must wait: no active site with applicable " + \
+						"version found for read"
+					t.instruction_buffer = i
+				elif t.status=="aborted":
+					pass
+
+			else: # if active+applicable site found
+				if t.is_read_only: # will succeed regardless in this step
 					val = site.dm.process_ro_read(t,vid)
-					print str(val) + " read from " + site.name
+					globalz.print_read_result(val,site,t)
 				
 				else: # if t is read/write, may need to wait
 					flag,val = site.dm.process_rw_read(t,vid)
 					
 					# if read was successful
-					if flag == globalz.Flag.Success:
-						t.add_site_access(site) # add to sites_accessed
-						print str(val) + " read from " + site.name
+					if flag == globalz.Message.success:
+						globalz.print_read_result(val,site,t)
 					
 					# if read is waiting on a lock
-					elif flag == globalz.Flag.Wait:
+					elif flag == globalz.Message.wait:
+						print "Must wait (lock): " + i
 						t.instruction_buffer = i
-						#t.pending_lock_sites.append(site)
 						t.pending_accesses.append({ 'site':site, 						
 										   'type':'r',
 										   'var':vid })
-						print "Must wait (lock): " + i
-					else: # flag == globalz.Flag.Abort
+
+					# if die due to wait die
+					else: # (flag == globalz.Message.Abort)
 						print "Aborting transaction " + t.id + " due to wait-die"
 						self.abort_transaction(t)
 				
@@ -201,20 +249,17 @@ class TransactionManager(object):
 			for site in site_list:
 				if site.active:
 					flag = site.dm.process_write(t,vid,val)
-					if flag == globalz.Flag.Success:
-						# add the site to sites_accessed
-						t.add_site_access(site)
-					elif flag == globalz.Flag.Wait:
-						#t.pending_lock_sites.append(site)
+					if flag == globalz.Message.wait:
 						t.pending_accesses.append({ 'site':site, 						
 										   'type':'w',
 										   'var':vid,
 										   'value':val })						
 						must_wait = True
-					elif flag == globalz.Flag.Abort:
+					elif flag == globalz.Message.abort:
 						print "Aborting transaction " + t.id + " due to wait-die"
 						self.abort_transaction(t)
 						return
+					# NOTE: if success, handled within the dm
 
 				else:
 					num_active -= 1					
@@ -223,7 +268,7 @@ class TransactionManager(object):
 				print "Must wait: no active site found for write"
 				t.instruction_buffer = i
 			elif must_wait:
-				print "Must wait for locks"
+				print "Must wait for some locks"
 				t.instruction_buffer = i
 
 		################
@@ -238,10 +283,17 @@ class TransactionManager(object):
 				if not site.active:
 					print_warning(i, "site already failed")
 				else:
+					# set site to failed
 					site.active = False
-					for variable in site.variables:
-						if variable.replicated:
-							variable.versions[0].available_for_read = False	
+
+					# mark all replicated vars unavailable for read
+					for variable in site.variables.values():
+						if globalz.var_is_replicated(variable.name):
+							for version in variable.versions:
+								version.available_for_read = False
+					
+					# reset the lock table
+					site.dm.lm.reset_lock_table()
 					print "Site " + a + " failed"
 
 		###################
@@ -257,7 +309,10 @@ class TransactionManager(object):
 					print_warning(i, "site already active")
 				else:
 					site.active = True
+					site.activation_time = globalz.clock 
 					print "Site " + a + " recovered"
+					# here, have to trigger finding ts in write interim
+					# that need more sites?
 
 		###########
 		# IF DUMP #
@@ -278,20 +333,28 @@ class TransactionManager(object):
 		elif re.match("^dump\(x\d*\)", i):
 			print "Dump of variable " + a + ":"
 			for site in self.directory[a]['sitelist']:
-				print site.name + ":" + str(site.variables[a].get_committed_version().value)
+				print site.name + ":" + \
+					str(site.variables[a].get_committed_version().value)
 
 		elif re.match("^querystate\(\)", i):
-			print "transactions in tm:"
+			print "TM'S TRANSACTIONS:"
 			self.print_transactions()
-			print "state of sites:"
+			print "SITE STATES AND LOCKS:"
 			for site in globalz.sites:
 				site.print_site_state()
+				site.dm.lm.print_lock_table()
 		
-
 		###############################
 		# IF NOT AN INSTRUCTION ABOVE #
 		###############################
 		else:
 			print_warning(i, "instruction not found")
-
 		return
+	
+	def print_directory(self):
+		print "tm's variable directory:"
+		pprint(self.directory)
+
+	def print_transactions(self):
+		print "tm's transaction directory:"
+		pprint(self.transactions)	

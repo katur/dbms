@@ -8,6 +8,7 @@
 
 begin(T1)
 W(T1,x1,36)
+querystate()
 end(T1)
 begin(T2)
 R(T2,x1)

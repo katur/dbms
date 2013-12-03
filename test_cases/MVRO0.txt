@@ -1,0 +1,14 @@
+// T1 should find site 10
+	
+beginRO(T1)
+fail(1)
+fail(2)
+fail(3)
+fail(4)
+fail(5)
+fail(6)
+fail(7)
+fail(8)
+fail(9)
+R(T1,x2)
+end(T1)
