@@ -47,7 +47,7 @@ class TransactionManager(object):
 		"""
 		site_list = self.directory[var_id]['sitelist']
 		index = self.directory[var_id]['next']
-		site = site_list[index]	
+		site = site_list[index]
 		for loop in range(len(site_list)+1):
 			index = (index+1) % len(site_list)		
 			self.directory[var_id]['next'] = index
@@ -246,7 +246,7 @@ class TransactionManager(object):
 				else:
 					site.active = False
 					for variable in site.variables.values():
-						if variable.replicated:
+						if globalz.var_is_replicated(variable.name):
 							for version in variable.versions:
 								version.available_for_read = False
 					print "Site " + a + " failed"
