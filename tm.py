@@ -178,19 +178,19 @@ class TransactionManager(object):
 					flag,val = site.dm.process_rw_read(t,vid)
 					
 					# if read was successful
-					if flag == globalz.Flag.Success:
+					if flag == globalz.Message.success:
 						t.add_site_access(site) # add to sites_accessed
 						globalz.print_read_result(val,site,t)
 					
 					# if read is waiting on a lock
-					elif flag == globalz.Flag.Wait:
+					elif flag == globalz.Message.wait:
 						t.instruction_buffer = i
 						#t.pending_lock_sites.append(site)
 						t.pending_accesses.append({ 'site':site, 						
 										   'type':'r',
 										   'var':vid })
 						print "Must wait (lock): " + i
-					else: # flag == globalz.Flag.Abort
+					else: # flag == globalz.Message.Abort
 						print "Aborting transaction " + t.id + " due to wait-die"
 						self.abort_transaction(t)
 				
@@ -208,16 +208,16 @@ class TransactionManager(object):
 			for site in site_list:
 				if site.active:
 					flag = site.dm.process_write(t,vid,val)
-					if flag == globalz.Flag.Success:
+					if flag == globalz.Message.success:
 						t.add_site_access(site)
-					elif flag == globalz.Flag.Wait:
+					elif flag == globalz.Message.wait:
 						#t.pending_lock_sites.append(site)
 						t.pending_accesses.append({ 'site':site, 						
 										   'type':'w',
 										   'var':vid,
 										   'value':val })						
 						must_wait = True
-					elif flag == globalz.Flag.Abort:
+					elif flag == globalz.Message.abort:
 						print "Aborting transaction " + t.id + " due to wait-die"
 						self.abort_transaction(t)
 						return

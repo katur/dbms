@@ -70,7 +70,7 @@ class DataManager(object):
 		"""
 		request_result = self.lm.request_lock(t,vid,'r',None)
 		
-		if request_result == globalz.Flag.Success:
+		if request_result == globalz.Message.success:
 			version_list = self.site.variables[vid].versions
 			for version in version_list:
 				if version.is_committed or version.written_by == t:
@@ -90,7 +90,7 @@ class DataManager(object):
 			- val: the value to be written
 		"""
 		request_result = self.lm.request_lock(t,vid,'w',val)
-		if request_result == globalz.Flag.Success:
+		if request_result == globalz.Message.success:
 			version_list = self.site.variables[vid].versions
 			
 			# create new version and insert at the beginning of the list

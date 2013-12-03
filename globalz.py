@@ -17,8 +17,8 @@ sites = [ Site(i,tm) for i in site_range ]
 var_ids = ['x' + str(id) for id in range(1,21)]
 
 # gives the result of a lock request 
-class Flag:
-	Abort, Wait, Success = range(3)	
+class Message:
+	abort, wait, success = range(3)	
 
 def print_read_result(val, site, transaction):
 	print str(val) + " read from " + str(site) + " for " + str(transaction)

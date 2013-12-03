@@ -58,27 +58,27 @@ class LockManager(object):
 			if not transaction in self.transaction_locks:
 				self.transaction_locks[transaction] = []
 			self.transaction_locks[transaction].append(vid)
-			return globalz.Flag.Success
+			return globalz.Message.success
 		# exclusive lock on variable
 		else:
 			locking_t = self.lock_table[vid].locking_ts[0]
 			if locking_t.start_time < transaction.start_time:
-				return globalz.Flag.Abort
+				return globalz.Message.abort
 			enqueue_result = self.enqueue_transaction(transaction,vid,'r',None)
 			if enqueue_result: 
-				return globalz.Flag.Success
+				return globalz.Message.success
 			else:
-				return globalz.Flag.Abort
+				return globalz.Message.abort
 		
 	def request_write_lock(self,transaction,vid,value):
 		for t in self.lock_table[vid].locking_ts:
 			if t.start_time < transaction.start_time:
-				return globalz.Flag.Abort
+				return globalz.Message.abort
 			enqueue_result = self.enqueue_transaction(transaction,vid,'w',value)
 			if enqueue_result: 
-				return globalz.Flag.Wait
+				return globalz.Message.wait
 			else:
-				return globalz.Flag.Abort				
+				return globalz.Message.abort				
 
 	def request_lock(self,transaction,vid,r_type,value):
 		lt_entry = self.lock_table[vid]
@@ -89,23 +89,23 @@ class LockManager(object):
 			if not transaction in self.transaction_locks:
 				self.transaction_locks[transaction] = []
 			self.transaction_locks[transaction].append(vid)
-			return globalz.Flag.Success
+			return globalz.Message.success
 		elif transaction in lt_entry.locking_ts:
 			# transaction already holds an exclusive lock
 			if lt_entry.lock == 'w':
-				return globalz.Flag.Success
+				return globalz.Message.success
 			else:
 			# transaction requests an upgrade from shared lock to exclusive
 				# transaction holds the only shared lock on variable
 				if len(lt_entry.locking_ts) == 1:
 					lt_entry.lock = 'w'
-					return globalz.Flag.Success
+					return globalz.Message.success
 				else:
 					enqueue_result = self.enqueue_transaction(transaction,vid,r_type,value)
 					if enqueue_result:
-						return globalz.Flag.Wait
+						return globalz.Message.wait
 					else:
-						return globalz.Flag.Abort
+						return globalz.Message.abort
 				
 		elif r_type == 'r':
 			return self.request_read_lock(transaction,vid)
