@@ -22,7 +22,6 @@ class TransactionManager(object):
 		self.transactions = {}
 
 
-	# might lose the following
 	def update_waiting_transaction(self,t,site):
 		for pa in t.pending_accesses:
 			if pa['site'] == site:
@@ -162,8 +161,9 @@ class TransactionManager(object):
 					print_warning(i,"transaction previously committed")
 				elif t.status is "aborted":
 					print_warning(i,"transaction previously aborted")
-				elif t.instruction_buffer:
-					print_warning(i,"can't commit due to a buffered instruction")
+				
+				#elif t.instruction_buffer:
+				#	print_warning(i,"can't commit due to a buffered instruction")
 				
 				# might lose the following
 				elif len(t.pending_accesses) > 0:
@@ -204,9 +204,9 @@ class TransactionManager(object):
 			
 			if not site:
 				if t.status=="active": # if no applicable site found
-					t.instruction_buffer = i
 					print "Must wait: no active site with applicable " + \
 						"version found for read"
+					t.instruction_buffer = i
 				elif t.status=="aborted":
 					pass
 
@@ -224,12 +224,12 @@ class TransactionManager(object):
 					
 					# if read is waiting on a lock
 					elif flag == globalz.Message.wait:
+						print "Must wait (lock): " + i
 						t.instruction_buffer = i
 						t.pending_accesses.append({ 'site':site, 						
 										   'type':'r',
 										   'var':vid })
-						print "Must wait (lock): " + i
-					
+
 					# if die due to wait die
 					else: # (flag == globalz.Message.Abort)
 						print "Aborting transaction " + t.id + " due to wait-die"
@@ -331,11 +331,12 @@ class TransactionManager(object):
 					str(site.variables[a].get_committed_version().value)
 
 		elif re.match("^querystate\(\)", i):
-			print "transactions in tm:"
+			print "TM'S TRANSACTIONS:"
 			self.print_transactions()
-			print "state of sites:"
+			print "SITE STATES AND LOCKS:"
 			for site in globalz.sites:
 				site.print_site_state()
+				site.dm.lm.print_lock_table()
 		
 		###############################
 		# IF NOT AN INSTRUCTION ABOVE #

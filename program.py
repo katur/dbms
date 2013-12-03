@@ -15,10 +15,10 @@ while line:
 	
 	elif line.strip() != "": # skip blank lines
 		globalz.clock += 1 # advance time by 1
-		print "---- time " + str(globalz.clock) + " ----"
+		print "----- time " + str(globalz.clock) + " -----"
 	
 		# re-try all pending instructions
-		#globalz.tm.attempt_pending_instructions()
+		# globalz.tm.attempt_pending_instructions()
 		
 		for site in globalz.sites:
 			site.dm.try_pending( )		
