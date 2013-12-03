@@ -79,13 +79,18 @@ class DataManager(object):
 			- t: the transaction requesting the read
 			- vid: the variable name to be read
 		"""
+		# try to get the lock
 		request_result = self.lm.request_lock(t,vid,'r',None)
 		
 		if request_result == globalz.Message.success:
+			# add the site to sites_accessed
+			t.add_site_access(self.site)
+
+			# get and return the read result to the tm
 			read_result = self.get_read_version(t,vid)
 			return [request_result, read_result]
 		
-		else: # read not achieved yet
+		else: # read not achieved yet, so let TM know why
 			return [request_result, None]
 	
 
@@ -99,13 +104,17 @@ class DataManager(object):
 		"""
 		request_result = self.lm.request_lock(t,vid,'w',val)
 		if request_result == globalz.Message.success:
-			version_list = self.site.variables[vid].versions
-			
+			# add the site to sites_accessed
+			t.add_site_access(self.site)
+
 			# create new (uncommitted) version 
 			#		and insert at the beginning of the list
 			new_version = VariableVersion(val,None,t,False)
+			version_list = self.site.variables[vid].versions
 			version_list.insert(0,new_version)
-			print vid + "=" + str(val) + " written at " + self.site.name + " (uncommitted)"
+
+			# alert console that it was written
+			globalz.print_write_result(vid,val,self.site,t)
 		return request_result
 	
 	

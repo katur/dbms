@@ -2,6 +2,10 @@ import re
 from db_site import Site
 from tm import TransactionManager
 
+# gives the result of a lock request 
+class Message:
+	abort, wait, success = range(3)	
+
 # global clock
 clock = 0
 
@@ -17,7 +21,7 @@ sites = [ Site(i,tm) for i in site_range ]
 # variable id table
 var_ids = ['x' + str(id) for id in range(1,21)]
 
-# see if var is replicated based on even vs odd
+# check if a var is replicated based on even vs odd
 def var_is_replicated(vid):
 	result = re.search("(?P<num>\d+)", vid)
 	if result:
@@ -27,9 +31,10 @@ def var_is_replicated(vid):
 	else:
 		return False
 
-# gives the result of a lock request 
-class Message:
-	abort, wait, success = range(3)	
-
-def print_read_result(val, site, transaction):
+# generic print messages for when a read or write happens,
+#		to be used by whatever module needs it
+def print_read_result(val,site,transaction):
 	print str(val) + " read from " + str(site) + " for " + str(transaction)
+
+def print_write_result(vid,val,site,t):
+	print vid + "=" + str(val) + " written at " + str(site) + " for " + str(t) 
