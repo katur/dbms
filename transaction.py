@@ -10,37 +10,42 @@ class Transaction(object):
 		self.start_time = globalz.clock
 		self.is_read_only = ro
 
-		# any instruction not completed is buffered
-		self.instruction_buffer = ""
+		self.instruction_buffer = "" # any instruction not completed
 
-		# if the instruction is not in progress, 
-		#		we will simply re-send instruction on every clock tick
-		#	if in progress, the instruction's progress will instead
-		#		be event driven (i.e., changes occur in response
-		#		to lock release, site failure, or site recovery)
 		self.instruction_in_progress = False
+		"""
+		if the instruction is not in progress, 
+			we will simply re-send instruction on every clock tick
+		if in progress, the instruction's progress will instead
+			be event driven (i.e., changes occur in response
+			to lock release, site failure, or site recovery)
+		"""
 
-		# list of (site, granted_lock), i.e., the sites that this
-		#		current pending transaction has requested locks at,
-		#		and whether they have been granted the lock.
-		# If this list is emptied with
-		#		an instruction in progress, then it should
-		#		simply be marked as no longer in progress.
-		# If all site(s) are granted locks, then 
-		#		the instruction has been completed.
-		# If any site is not granted a lock, the instruction
-		#		is still in progress.
 		self.sites_in_progress = []
+		"""
+		above is list of (site, granted_lock), i.e., the sites that this
+			current pending transaction has requested locks at,
+			and whether they have been granted the lock.
+		If this list is emptied with
+			an instruction in progress, then it should
+			simply be marked as no longer in progress.
+		If all site(s) are granted locks, then 
+			the instruction has been completed.
+		If any site is not granted a lock, the instruction
+			is still in progress.
+		"""
 
 		if self.is_read_only:
-			# Impossible_sites is a list of sites attempted
-			#		and deemed impossible to read from (while active)
-			#		for a RO transaction to perform its current read.
-			#		This is to cover corner sites that ALL sites
-			#		have failed since RO started, so no version exists
-			#		and the transaction should abort.
-			#	Note: must clear impossible sites every RO read.
 			self.impossible_sites = []
+			"""
+			Impossible_sites is a list of sites attempted
+				and deemed impossible to read from (while active)
+				for a RO transaction to perform its current read.
+				This is to cover corner sites that ALL sites
+				have failed since RO started, so no version exists
+				and the transaction should abort.
+			Note: must clear impossible sites every RO read.
+			"""
 		else: # if read-write
 			self.sites_accessed = [] # [ ( site,first_access_time ) ], for avail copies
 

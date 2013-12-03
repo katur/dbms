@@ -78,10 +78,7 @@ class TransactionManager(object):
 				if site.name not in t.impossible_sites:
 					t.impossible_sites.append(site.name)
 					if len(t.impossible_sites) == 10:
-						self.abort_transaction(t)
-						print "Aborted Read-Only " + str(t) + \
-							" since all sites deemed impossible to read from" + \
-							"(all versions are too old)"
+						self.abort_transaction(t,"MVRC situation where all sites deemed impossible to read from (versions too old)")
 						return None
 			
 			# increment to next index
@@ -89,11 +86,25 @@ class TransactionManager(object):
 		return None
 
 
-	def abort_transaction(self,t):
+	def abort_transaction(self,t,reason):
 		t.status = "aborted"
 		if not t.is_read_only:
 			for site,access_time in t.sites_accessed:
 				site.dm.process_abort(t)
+		print "Aborting transaction " + \
+			t.id + " due to " + reason
+
+
+	def commit_transaction(self,t):
+		t.status = "committed"
+		
+		if t.is_read_only: # if read only, not much to do!
+			print "Committed RO transaction " + a
+		else: # if read-write
+			for site,access_time in t.sites_accessed:
+				site.dm.process_commit(t)
+			print "Committed transaction" + a
+
 
 	def attempt_unstarted_buffered_instructions(self):
 		"""
@@ -152,18 +163,17 @@ class TransactionManager(object):
 				print_warning(i,"transaction does not exist")
 			else:
 				t = self.transactions[a]
-				if t.status is "committed":
+				if t.instruction_buffer:
+					print_warning(i,"can't commit due to a buffered instruction")
+					
+				elif t.status is "committed":
 					print_warning(i,"transaction previously committed")
 				elif t.status is "aborted":
 					print_warning(i,"transaction previously aborted")
 				
-				elif t.instruction_buffer:
-					print_warning(i,"can't commit due to a buffered instruction")
-				
 				elif t.is_read_only and t.status=="active": 
 					# not much to do for RO on commit!
-					t.status = "committed"
-					print "Committed RO transaction " + a
+					self.commit_transaction(t)
 				
 				else: # t is read-write
 					# make sure all sites are up now, 
@@ -171,16 +181,11 @@ class TransactionManager(object):
 					for site,access_time in t.sites_accessed:
 						# if some site hasn't been up, abort
 						if not site.active or site.activation_time > access_time:
-							print "Aborting transaction " + t.id + \
-								" due to avail copies algo"
-							self.abort_transaction(t)
+							self.abort_transaction(t,"available copies algorithm")
 							return
 
 					# otherwise, commit
-					for site,access_time in t.sites_accessed:
-						site.dm.process_commit(t)
-					t.status = "committed"
-					print "Committed " + a
+					self.commit_transaction(t)
 		
 		###########
 		# IF READ #
@@ -188,6 +193,8 @@ class TransactionManager(object):
 		elif re.match("^R\(.+\,.+\)", i):
 			tid,vid = [x.strip() for x in a.split(',')]
 			t = self.transactions[tid]
+			if t.instruction_buffer:
+				print_warning(i,"new instruction received while one pending")
 
 			# find a site that is both active and applicable for the read
 			#		(i.e., has a committed version avail 
@@ -204,26 +211,23 @@ class TransactionManager(object):
 
 			else: # if active+applicable site found
 				if t.is_read_only: # will succeed regardless in this step
-					val = site.dm.process_ro_read(t,vid)
-					globalz.print_read_result(val,site,t)
+					site.dm.process_ro_read(t,vid)
+					# NOTE: printing handled by the dm
 				
 				else: # if t is read/write, may need to wait
 					flag,val = site.dm.process_rw_read(t,vid)
 					
-					# if read was successful
-					if flag == globalz.Message.success:
-						globalz.print_read_result(val,site,t)
-					
 					# if read is waiting on a lock
-					elif flag == globalz.Message.wait:
+					if flag == globalz.Message.wait:
 						print "Must wait (lock): " + i
 						t.add_started_instruction_to_buffer(i,site)
 
 					# if die due to wait die
-					else: # (flag == globalz.Message.Abort)
-						print "Aborting transaction " + \
-							t.id + " due to wait-die"
-						self.abort_transaction(t)
+					elif flag == globalz.Message.Abort:
+						self.abort_transaction(t,"wait-die")
+
+					# note: success case handled by the dm
+					#		(the print occurs there)
 				
 		############
 		# IF WRITE #
@@ -232,6 +236,8 @@ class TransactionManager(object):
 			tid,vid,val = [x.strip() for x in a.split(',')]
 			val = int(val)
 			t = self.transactions[tid]			
+			if t.instruction_buffer:
+				print_warning(i,"new instruction received while one pending")
 			
 			site_list = self.directory[vid]['sitelist']
 			num_active = len(site_list)
@@ -240,14 +246,12 @@ class TransactionManager(object):
 				if site.active:
 					flag = site.dm.process_write(t,vid,val)
 					if flag == globalz.Message.wait:
-						print "waiting on lock at site " + \
+						print "Waiting on lock at site " + \
 							str(site)
 						t.add_started_instruction_to_buffer(i,site)
 					
 					elif flag == globalz.Message.abort:
-						print "Aborting transaction " + \
-							t.id + " due to wait-die"
-						self.abort_transaction(t)
+						self.abort_transaction(t,"wait-die")
 						return
 					# NOTE: success handled within dm
 
