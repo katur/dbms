@@ -115,7 +115,7 @@ class TransactionManager(object):
 		for t in ts:
 			if t.status is "active" and t.instruction_buffer and not t.instruction_in_progress:
 				i = t.instruction_buffer # save instruction
-				t.instruction_buffer = "" # reset buffer
+				t.reset_buffer()
 				# NOTE: buffer will get re-filled if instruction
 					# still can't start
 				
