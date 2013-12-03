@@ -30,11 +30,3 @@ def var_is_replicated(vid):
 		return True
 	else:
 		return False
-
-# generic print messages for when a read or write happens,
-#		to be used by whatever module needs it
-def print_read_result(val,site,transaction):
-	print str(val) + " read from " + str(site) + " for " + str(transaction)
-
-def print_write_result(vid,val,site,t):
-	print vid + "=" + str(val) + " written at " + str(site) + " for " + str(t) 

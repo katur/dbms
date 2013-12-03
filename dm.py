@@ -14,30 +14,6 @@ class DataManager(object):
 		self.lm = LockManager(self)
 	
 	
-	def try_pending(self):
-		"""
-		Cycles through each variable in the site, distributing new locks
-		where available. Transactions receiving locks are updated
-		by the transaction manager via @tm.update_waiting_transaction.
-		"""
-		for vid in self.site.variables:
-			updates = self.lm.update_queue(vid)
-			# some pending transaction(s) has obtained a shared lock
-			if updates and updates['lock_type'] == 'r':
-				for t in updates['ts']:
-					val = self.read_version_for_rw(t,vid)
-					if val:
-						globalz.print_read_result(val,site,t)
-					globalz.tm.update_waiting_transaction(t,self.site)							
-			
-			# some pending transaction(s) has obtained an exclusive lock
-			elif updates:
-				transaction = updates['ts'][0]
-				val = updates['write_value']
-				print vid + "=" + str(val) + " written at " + self.site.name + " (uncommitted)"							
-				globalz.tm.update_waiting_transaction(transaction,self.site)
-
-
 	def get_read_version(self,t,vid):
 		"""
 		read the appropriate version of variable vid at this site.
@@ -64,6 +40,15 @@ class DataManager(object):
 		return None
 
 
+	def print_read_result(self,t,val):
+		print str(val) + " read from " + str(self.site) + " for " + str(t)
+
+
+	def print_write_result(self,t,val,vid):
+		print vid + "=" + str(val) + " written at " + str(self.site) + \
+			" for " + str(t) 
+
+
 	def process_ro_read(self,t,vid):
 		"""
 		Process a read request from the TM
@@ -72,15 +57,29 @@ class DataManager(object):
 			- t: the read-only transaction
 			- vid: the variable name to be read
 		"""
-		return self.get_read_version(t,vid)
+		read_result = self.get_read_version(t,vid)
+		self.print_read_result(t,read_result)
+		return read_result
 
+	
 	def do_read(self,t,vid):
+		"""
+		Perform the actual read,
+		adding it to sites accessed
+		and printing the result
+		"""
 		# add the site to sites_accessed
 		t.add_site_access(self.site)
 
 		# get and return the read result
 		read_result = self.get_read_version(t,vid)
-		return read_result
+
+		# if there was a result, print it
+		if read_result:
+			self.print_read_result(t,read_result)
+		
+		return read_result # might be None
+	
 
 	def process_rw_read(self,t,vid):
 		"""
@@ -100,6 +99,7 @@ class DataManager(object):
 		else: # read not achieved yet, so let TM know why
 			return [request_result, None]
 	
+
 	def apply_write(self,t,vid,val):	
 		# add the site to sites_accessed
 		t.add_site_access(self.site)
@@ -111,7 +111,8 @@ class DataManager(object):
 		version_list.insert(0,new_version)
 
 		# alert console that it was written
-		globalz.print_write_result(vid,val,self.site,t)		
+		print_write_result(t,val,vid)		
+
 
 	def process_write(self,t,vid,val):
 		"""

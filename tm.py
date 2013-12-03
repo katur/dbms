@@ -205,25 +205,23 @@ class TransactionManager(object):
 			else: # if active+applicable site found
 				if t.is_read_only: # will succeed regardless in this step
 					val = site.dm.process_ro_read(t,vid)
-					globalz.print_read_result(val,site,t)
 				
 				else: # if t is read/write, may need to wait
 					flag,val = site.dm.process_rw_read(t,vid)
 					
-					# if read was successful
-					if flag == globalz.Message.success:
-						globalz.print_read_result(val,site,t)
-					
 					# if read is waiting on a lock
-					elif flag == globalz.Message.wait:
+					if flag == globalz.Message.wait:
 						print "Must wait (lock): " + i
 						t.add_started_instruction_to_buffer(i,site)
 
 					# if die due to wait die
-					else: # (flag == globalz.Message.Abort)
+					elif flag == globalz.Message.Abort:
 						print "Aborting transaction " + \
 							t.id + " due to wait-die"
 						self.abort_transaction(t)
+
+					# note: success case handled by the dm
+					#		(the print occurs there)
 				
 		############
 		# IF WRITE #
