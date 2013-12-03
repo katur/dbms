@@ -40,18 +40,23 @@ class TransactionManager(object):
 				return True
 		return False	
 
-	def locate_read_site(self, var_id):
+	def locate_read_site(self,t,vid):
 		"""
-		locate next active site for variable var_id.
-		returns None if no active sites are found.
+		Locate next active site with applicable read
+			for transaction t reading variable var_id.
+		Returns None if no active sites are found.
 		"""
-		site_list = self.directory[var_id]['sitelist']
-		index = self.directory[var_id]['next']
+		site_list = self.directory[vid]['sitelist']
+		index = self.directory[vid]['next']
 		site = site_list[index]
+
+		# for each possible site, see if it has
+		#		a var that is both active and avail to read
+		#		depending on if for ro or rw
 		for loop in range(len(site_list)+1):
 			index = (index+1) % len(site_list)		
-			self.directory[var_id]['next'] = index
-			if site.active:
+			self.directory[vid]['next'] = index
+			if site.active and site.dm.get_read_version(t,vid):
 				return site
 			site = site_list[index]
 		return None
@@ -161,7 +166,7 @@ class TransactionManager(object):
 		elif re.match("^R\(.+\,.+\)", i):
 			tid,vid = [x.strip() for x in a.split(',')]
 			t = self.transactions[tid]
-			site = self.locate_read_site(vid)
+			site = self.locate_read_site(t,vid)
 			
 			if not site: # if no active site was found
 				print "Must wait: no active site found for read"

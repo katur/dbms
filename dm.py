@@ -38,36 +38,25 @@ class DataManager(object):
 				globalz.tm.update_waiting_transaction(transaction,self.site)
 
 
-	def read_version_for_ro(self,t,vid):
+	def get_read_version(self,t,vid):
 		"""
-		read the appropriate version of variable vid at this site
-			for RO transaction t
+		read the appropriate version of variable vid at this site.
+		returns None if no appropriate version exists at the site.
 		"""
 		version_list = self.site.variables[vid].versions
-		for version in version_list:
+		for v in version_list:
 			# if encounter a version not avilable to read,
-			# there must have been a failure, so no
-			# further version will be acceptable for read
-			if not version.available_for_read:
+			#		there must have been a failure, so no
+			#		older version will be acceptable for read,
+			#		so can stop iterating
+			if not v.available_for_read:
 				return None
-
-			if version.is_committed and version.time_committed<=t.start_time:
-				return version.value
-		return None
-
-
-	def read_version_for_rw(self,t,vid):
-		"""
-		read the appropriate version of variable vid at this site
-			for RW transaction t
-		"""
-		version_list = self.site.variables[vid].versions
-		for version in version_list:
-			if not version.available_for_read:
-				return None
-
-			if version.is_committed or version.written_by==t:
-				return version.value
+			
+			if t.is_read_only and v.is_committed and v.time_committed<=t.start_time:
+				return v.value
+			if not t.is_read_only and (v.is_committed or v.written_by==t):
+				return v.value
+		# if applicable version not found, return None
 		return None
 
 
@@ -79,7 +68,7 @@ class DataManager(object):
 			- t: the read-only transaction
 			- vid: the variable name to be read
 		"""
-		return self.read_version_for_ro(t,vid)
+		return self.get_read_version(t,vid)
 
 
 	def process_rw_read(self,t,vid):
@@ -93,7 +82,7 @@ class DataManager(object):
 		request_result = self.lm.request_lock(t,vid,'r',None)
 		
 		if request_result == globalz.Message.success:
-			read_result = self.read_version_for_rw(t,vid)
+			read_result = self.get_read_version(t,vid)
 			return [request_result, read_result]
 		
 		else: # read not achieved yet
