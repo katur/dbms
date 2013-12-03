@@ -1,4 +1,11 @@
 // T2 should die
+// begin(T1)
+// begin(T2)
+// R(T1,x2)
+// W(T2,x2,101)
+// end(T2)
+// end(T1)
+
 begin(T1)
 begin(T2)
 R(T1,x2)

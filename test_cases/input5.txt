@@ -1,4 +1,11 @@
 // should be no problem sharing a lock
+// begin(T1)
+// R(T1,x1)
+// begin(T2)
+// R(T2,x1)
+// end(T1)
+// end(T2)
+
 begin(T1)
 R(T1,x1)
 begin(T2)
