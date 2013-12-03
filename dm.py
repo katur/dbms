@@ -13,26 +13,23 @@ class DataManager(object):
 		self.site = site
 		self.lm = LockManager()
 	
-	# Cycles through each variable in the site, distributing new locks
-	# where available. Transactions receiving locks are updated
-	# by the transaction manager via @tm.update_waiting_transaction.
+	
 	def try_pending(self):
+		"""
+		Cycles through each variable in the site, distributing new locks
+		where available. Transactions receiving locks are updated
+		by the transaction manager via @tm.update_waiting_transaction.
+		"""
 		for vid in self.site.variables:
 			updates = self.lm.update_queue(vid)
 			# some pending transaction(s) has obtained a shared lock
 			if updates and updates['lock_type'] == 'r':
 				for t in updates['ts']:
-					read_value = None
-					for version in self.site.variables[var].versions:
-						if (version.is_committed and version.available_for_read) or version.written_by == t:					
-							read_value = version.value
-							break
-					print( 'Transaction ' + str(t) + 'reads value ' +
-							str(read_value) + ' from ' + self.site.name )
-					
-					# NOTE: should switch to this for printing:
-					# globalz.print_read_result(read_value,self.site,t) 
+					val = read_version_for_rw(self,t,vid)
+					if val:
+						globalz.print_read_result(val,site,t)
 					globalz.tm.update_waiting_transaction(t,self.site)							
+			
 			# some pending transaction(s) has obtained an exclusive lock
 			elif updates:
 				transaction = updates['ts'][0]
@@ -40,13 +37,11 @@ class DataManager(object):
 				print vid + "=" + str(val) + " written at " + self.site.name + " (uncommitted)"							
 				globalz.tm.update_waiting_transaction(transaction,self.site)
 
-	def process_ro_read(self,t,vid):
+
+	def read_version_for_ro(self,t,vid):
 		"""
-		Process a read request from the TM
-		for a read-only transaction.
-		Arguments: 
-			- t: the read-only transaction
-			- vid: the variable name to be read
+		read the appropriate version of variable vid at this site
+			for RO transaction t
 		"""
 		version_list = self.site.variables[vid].versions
 		for version in version_list:
@@ -59,6 +54,33 @@ class DataManager(object):
 			if version.is_committed and version.time_committed<=t.start_time:
 				return version.value
 		return None
+
+
+	def read_version_for_rw(self,t,vid):
+		"""
+		read the appropriate version of variable vid at this site
+			for RW transaction t
+		"""
+		version_list = self.site.variables[vid].versions
+		for version in version_list:
+			if not version.available_for_read:
+				return None
+
+			if version.is_committed or version.written_by==t:
+				return version.value
+		return None
+
+
+	def process_ro_read(self,t,vid):
+		"""
+		Process a read request from the TM
+		for a read-only transaction.
+		Arguments: 
+			- t: the read-only transaction
+			- vid: the variable name to be read
+		"""
+		read_version_for_ro(self,t,vid)
+
 
 	def process_rw_read(self,t,vid):
 		"""
@@ -77,13 +99,7 @@ class DataManager(object):
 		else: # read not achieved
 			return [request_result,None]
 	
-	def read_version_for_rw(self,t,vid):
-		version_list = self.site.variables[vid].versions
-		for version in version_list:
-			if (version.is_committed and version.available_for_read) or version.written_by==t:
-				return version.value
-		return None
-	
+
 	def process_write(self,t,vid,val):
 		"""
 		Process a write request from the TM.
@@ -103,6 +119,7 @@ class DataManager(object):
 			print vid + "=" + str(val) + " written at " + self.site.name + " (uncommitted)"
 		return request_result
 	
+	
 	def process_commit(self,t):
 		"""
 		Process a commit request from the TM
@@ -120,6 +137,7 @@ class DataManager(object):
 			latest_version.is_committed = True
 		self.lm.release_locks(t)
 		
+	
 	def process_abort(self,t):
 		"""
 		Process an abort request from the TM.
