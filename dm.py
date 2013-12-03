@@ -11,7 +11,7 @@ class DataManager(object):
 	"""
 	def __init__(self,site):
 		self.site = site
-		self.lm = LockManager()
+		self.lm = LockManager(self)
 	
 	
 	def try_pending(self):
@@ -74,6 +74,13 @@ class DataManager(object):
 		"""
 		return self.get_read_version(t,vid)
 
+	def do_read(self,t,vid):
+		# add the site to sites_accessed
+		t.add_site_access(self.site)
+
+		# get and return the read result
+		read_result = self.get_read_version(t,vid)
+		return read_result
 
 	def process_rw_read(self,t,vid):
 		"""
@@ -87,16 +94,24 @@ class DataManager(object):
 		request_result = self.lm.request_lock(t,vid,'r',None)
 		
 		if request_result == globalz.Message.success:
-			# add the site to sites_accessed
-			t.add_site_access(self.site)
-
-			# get and return the read result to the tm
-			read_result = self.get_read_version(t,vid)
+			read_result = self.do_read(t,vid)
 			return [request_result, read_result]
 		
 		else: # read not achieved yet, so let TM know why
 			return [request_result, None]
 	
+	def apply_write(self,t,vid,val):
+		# add the site to sites_accessed
+		t.add_site_access(self.site)
+
+		# create new (uncommitted) version 
+		#		and insert at the beginning of the list
+		new_version = VariableVersion(val,None,t,False)
+		version_list = self.site.variables[vid].versions
+		version_list.insert(0,new_version)
+
+		# alert console that it was written
+		globalz.print_write_result(vid,val,self.site,t)		
 
 	def process_write(self,t,vid,val):
 		"""
@@ -108,17 +123,7 @@ class DataManager(object):
 		"""
 		request_result = self.lm.request_lock(t,vid,'w',val)
 		if request_result == globalz.Message.success:
-			# add the site to sites_accessed
-			t.add_site_access(self.site)
-
-			# create new (uncommitted) version 
-			#		and insert at the beginning of the list
-			new_version = VariableVersion(val,None,t,False)
-			version_list = self.site.variables[vid].versions
-			version_list.insert(0,new_version)
-
-			# alert console that it was written
-			globalz.print_write_result(vid,val,self.site,t)
+			self.apply_write(t,vid,val)
 		return request_result
 	
 	

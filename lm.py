@@ -35,7 +35,10 @@ class LockManager(object):
 	"""
 	Lock manager object	
 	"""
-	def __init__(self):
+	def __init__(self,dm):
+		# corresponding data manager
+		self.dm = dm
+	
 		# lock table key:var; value:lock table entry
 		self.lock_table = {} 
 		
@@ -51,6 +54,7 @@ class LockManager(object):
 	def reset_lock_table(self):
 		self.lock_table = {}
 
+	"""
 	def update_queue(self,vid):
 		lt_entry = self.lock_table[vid]
 		if lt_entry.lock == 'n' and len(lt_entry.q) > 0:
@@ -71,7 +75,32 @@ class LockManager(object):
 			return updates
 		else:
 			return None
-		
+	"""
+	
+	def update_queue(self,var):
+		q = self.lock_table[var].q
+		if len(q) > 0:
+		# pending transaction(s) requests shared lock
+		if q[0].r_type == 'r':
+			self.lock_table[var].lock = 'r' # apply shared lock to var
+			while q[0].r_type == 'r':				
+				q_entry = q.pop( ) # pop t from queue
+				t = q_entry.transaction
+				self.lock_table[var].locking_ts.append(t) # assign shared lock to t
+				self.transaction_locks[t].append(var) # assign shared lock to t
+				self.dm.do_read(t,var) # get and print read result
+				t.grant_lock(self.dm.site) # update t 
+		# pending transaction(s) requests exclusive lock				
+		else:
+			self.lock_table[var].lock = 'w' # apply exclusive lock to var
+			q_entry = q.pop( )# pop t from queue
+			t = q_entry.transaction
+			self.lock_table[var].locking_ts = [t] # assign exclusive lock to t	
+			self.transaction_locks[t].append(var) # assign exclusive lock to t	
+			val = q_entry.value 
+			self.dm.apply_write(t,var,val) # apply write and print result to console
+			t.grant_lock(self.dm.site) # update t
+				
 	
 	def enqueue_transaction(self,t,vid,r_type,val):
 		"""
@@ -95,11 +124,12 @@ class LockManager(object):
 		Release all the locks at this site
 		held by t.
 		"""
-		for vid in self.transaction_locks[t]:
+		for var in self.transaction_locks[t]:
 			print "releasing a lock on " + vid
-			self.lock_table[vid].locking_ts.remove(t)
-			if len(self.lock_table[vid].locking_ts)==0:
-				self.lock_table[vid].lock = 'n'
+			self.lock_table[var].locking_ts.remove(t)
+			if len(self.lock_table[var].locking_ts)==0:
+				self.lock_table[var].lock = 'n'
+				self.update_queue(var)
 
 
 	def request_lock(self,t,vid,r_type,value):
