@@ -71,13 +71,13 @@ class DataManager(object):
 		request_result = self.lm.request_lock(t,vid,'r',None)
 		
 		if request_result == globalz.Message.success:
-			read_result = read_correct_versino_for_rw(self,t,vid)
+			read_result = read_version_for_rw(self,t,vid)
 			return [request_result, version.value]
 		
 		else: # read not achieved
 			return [request_result,None]
 	
-	def read_correct_version_for_rw(self,t,vid):
+	def read_version_for_rw(self,t,vid):
 		version_list = self.site.variables[vid].versions
 		for version in version_list:
 			if (version.is_committed and version.available_for_read) or version.written_by==t:
