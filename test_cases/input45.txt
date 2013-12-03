@@ -1,0 +1,8 @@
+// here, the upgrade to exclusive lock should have to wait
+begin(T1)
+R(T1,x1)
+begin(T2)
+R(T2,x1)
+W(T1,x1,36)
+end(T2)
+end(T1)

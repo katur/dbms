@@ -48,6 +48,8 @@ class LockManager(object):
 	def print_lock_table(self):
 		pprint(self.lock_table) 
 
+	def reset_lock_table(self):
+		self.lock_table = {}
 
 	def update_queue(self,vid):
 		lt_entry = self.lock_table[vid]

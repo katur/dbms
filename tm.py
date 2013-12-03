@@ -283,11 +283,17 @@ class TransactionManager(object):
 				if not site.active:
 					print_warning(i, "site already failed")
 				else:
+					# set site to failed
 					site.active = False
+
+					# mark all replicated vars unavailable for read
 					for variable in site.variables.values():
 						if globalz.var_is_replicated(variable.name):
 							for version in variable.versions:
 								version.available_for_read = False
+					
+					# reset the lock table
+					site.dm.lm.reset_lock_table()
 					print "Site " + a + " failed"
 
 		###################
