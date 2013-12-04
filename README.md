@@ -16,13 +16,13 @@ python program.py < input.txt
 
 
 ## Design Document
-*high-level overview of organization*
+### high-level overview of organization
 
 
 ## Updated Project Specification
-*listing all functions and data members of the various modules/classes*
+### listing all functions and data members of the various modules/classes
 
-### Main program
+#### Main program
 - call initialize() function to initialize the data in the sites, create the TM's variable directory, and create lock objects for each var at each site, per the spec.
 - loop:
 	* input a line from stdin (skipping if whitespace or a comment)
@@ -31,7 +31,7 @@ python program.py < input.txt
 	* parse the new input line, splitting on semicolon
 	* send each instructions to the tm to execute (tm.process_instruction)
 
-### Globals
+#### Globals
 - clock:
 	* integer initialized to 0
 	* increments with each line of input
@@ -40,7 +40,7 @@ python program.py < input.txt
 - var_ids: list of all var ids
 - var_is_replicated(var): check if var replicated based on even/odd
 
-### Transaction object
+#### Transaction object
 - id: the transaction id
 - status: "active", "committed", "aborted"
 - start_time: clock time when transaction was created
@@ -63,7 +63,7 @@ python program.py < input.txt
 - reset_buffer, add_started_instruction_to_buffer, and add_unstarted_instruction_to_buffer
 	* updates the instruction buffer and related fields (instruction_in_progress and sites_in_progress) based on instruction completion, instruction being deemed unstarted, and instruction starting, respectively
 
-### Transaction\_Manager object
+#### Transaction\_Manager object
 - directory dictionary
 	* keyed on variable name
 	* per var, a list with all sites including copies of that var
@@ -99,26 +99,26 @@ python program.py < input.txt
 		+ find any transactions with in-progress writes on a var present at this site, and add the recovered site to the write
 	* dump(), dump(site), dump(var), querystate(), transactions(): dump info to console
 
-### Site object (10 total)
+#### Site object (10 total)
 - name: this site's name (e.g. "site1")
 - active: Boolean for whether or not site is currently active (initially True)
 - activation_time: most recent recovery time (initially 0)
 - variables: dictionary of variables present at this site, keyed on variable name, value variable object
 - dm: data manager for this site
 
-### Variable object
+#### Variable object
 - name: this variable's name
 - versions: list of the versions of that variable over time (newest first)
 - get_committed_versions(self): iterates over versions to find all committed versions
 
-### VariableVersion object
+#### VariableVersion object
 - value: the value written to this version of the variable
 - written_by: the transaction that wrote this version
 - is_committed: Boolean of whether or not this version is committed
 - time_committed: the time this version was committed (False if not committed)
 - available_for_read: Boolean of whether or not this version is available to read (versus not available to read, due to failure)
 
-### DataManager object
+#### DataManager object
 - site: the site the DM is managing 
 - lm: lock manager for this data manager
 - get_read_version(self,t,vid)
@@ -148,7 +148,7 @@ python program.py < input.txt
 	 * release the locks for this transaction. Could delete its uncommitted writes at this point, but we're keeping them in for debugging purposes.
 
 
-### Lock Manager object
+#### Lock Manager object
 - lock_table: dictionary keyed on var present at the site, value a lock table entry
 - transaction_locks: dictionary keyed on transactions holding locks at this site, value a list of the vars the transaction has locks on at this site.
 - enqueue_transaction
@@ -157,16 +157,16 @@ python program.py < input.txt
 - request_write_lock
 - request_lock
 
-### Lock Table Entry object
+#### Lock Table Entry object
 - var: the var this lock is on
 - lock: 'w' for exclusive, 'r' for shared, 'n' for not locked right now
 - locking_ts: list of transcations currently holding the lock on this var
 - q: queue of QueueEntry objects, i.e., transactions waiting on this lock along with some information regarding the lock request
 
-### Queue Entry object
+#### Queue Entry object
 - transaction: the transcation waiting
 - r_type: whether read or write
 - value: the value to be written, if any
 
-### Message object
+#### Message object
 - Abort, Wait, or Success based on lock request result
