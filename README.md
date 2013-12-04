@@ -101,15 +101,14 @@ python program.py < input.txt
 
 ### Variable object
 - name: this variable's name
-- replicated: Boolean if whether this is a replicated var (initialized at beginning of program)
 - versions: list of the versions of that variable over time (newest first)
-- get_committed_version(self): iterates over versions to find the most recent committed version 
+- get_committed_versions(self): iterates over versions to find all committed versions
 
 ### VariableVersion object
 - value: the value written to this version of the variable
-- timestamp: the time this version was written
 - written_by: the transaction that wrote this version
 - is_committed: Boolean of whether or not this version is committed
+- time_committed: the time this version was committed (False if not committed)
 - available_for_read: Boolean of whether or not this version is available to read (versus not available to read, due to failure)
 
 ### DataManager object

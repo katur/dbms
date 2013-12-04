@@ -22,18 +22,3 @@ class VariableVersion(object):
 			string += "UN"
 		string += "avail to read}"
 		return string
-		
-		"""
-		# more elaborate version:
-		string = '{' + str(self.value) + ' written by ' + \
-			str(self.written_by) + ' @ time ' + \
-			str(self.time_committed)
-		if self.is_committed:
-			string += ", committed, "
-		else:
-			string += ", NOT committed, "
-		if not self.available_for_read:
-			string += "un"
-		string += "available to read} "
-		return string
-		"""
