@@ -127,7 +127,7 @@ class LockManager(object):
 					# release t's shared lock
 					lt_entry.locking_ts.remove(t)
 					for i in range(len(t.sites_in_progress)):
-						if t.sites_in_progress[i][0] == site:
+						if t.sites_in_progress[i][0] == self.dm.site:
 							t.sites_in_progress[i][1] = False
 							break
 					self.transaction_locks[t].remove(vid)
