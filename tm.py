@@ -90,7 +90,7 @@ class TransactionManager(object):
 			and some locks may be released
 		"""
 		t.status = "aborted"
-
+		t.reset_buffer( )
 		# alert to console
 		print "Aborting transaction " + \
 			t.id + " due to " + reason
@@ -100,7 +100,6 @@ class TransactionManager(object):
 		if not t.is_read_only:
 			for site,access_time in t.sites_accessed:
 				site.dm.process_abort(t)
-
 
 	def commit_transaction(self,t):
 		"""
