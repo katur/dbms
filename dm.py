@@ -47,7 +47,7 @@ class DataManager(object):
 
 
 	def print_write_result(self,t,val,vid):
-		print str(t) + " wrote " + vid + "=" + str(val) + " at " + str(self.site)
+		print "\t" + str(t) + " wrote " + vid + "=" + str(val) + " at " + str(self.site) + " (uncommitted)"
 
 
 	def process_ro_read(self,t,vid):
@@ -57,6 +57,9 @@ class DataManager(object):
 		Arguments: 
 			- t: the read-only transaction
 			- vid: the variable name to be read
+		Side effects
+			- t's buffer is reset
+			- read result printed to console
 		"""
 		read_result = self.get_read_version(t,vid)
 		self.print_read_result(t,read_result,vid)
@@ -66,9 +69,15 @@ class DataManager(object):
 	
 	def do_read(self,t,vid):
 		"""
-		Perform the actual read,
-		adding it to sites accessed
-		and printing the result
+		Perform the actual read
+		Arguments:
+			- t: a read-write transaction 
+			- vid: a variable to read
+		Return value:
+			- the value read, or None if none read
+		Side effects:
+			- read value is printed to console
+			- t's buffer reset
 		"""
 		# add the site to sites_accessed
 		t.add_site_access(self.site)
@@ -91,6 +100,13 @@ class DataManager(object):
 		Arguments:
 			- t: the transaction requesting the read
 			- vid: the variable name to be read
+		Side effects:
+			- a lock might be grated to t,
+				or it might end up enqueued for a lock
+		Return value:
+			- a two-item list with 
+				1) a message about the success of the lock request
+				2) the read result
 		"""
 		# try to get the lock
 		request_result = self.lm.request_lock(t,vid,'r',None)
@@ -103,7 +119,18 @@ class DataManager(object):
 			return [request_result, None]
 	
 
-	def apply_write(self,t,vid,val):	
+	def apply_write(self,t,vid,val):
+		"""
+		Actually perform the write
+		Arguments
+			- transaction writing
+			- variable being written
+			- value to write
+		Side effects:
+			- a new version is created and applied
+			- write alert printed to console
+			- intstruction buffer for t may be reset
+		"""
 		# add the site to sites_accessed
 		t.add_site_access(self.site)
 
@@ -151,6 +178,9 @@ class DataManager(object):
 		Process a commit request from the TM
 		Argument:
 			- t: the transaction to be committed.
+		Side effects:
+			- writes marked as committed
+			- locks released
 		"""
 		var_accessed = self.lm.transaction_locks[t]
 		#print( str(len(var_accessed)) + " variables accessed at " +
@@ -169,5 +199,7 @@ class DataManager(object):
 		Process an abort request from the TM.
 		Argument:
 			- t: the transaction to be aborted.
+		Side effect:
+			- locks released
 		"""
 		self.lm.release_locks(t)

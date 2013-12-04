@@ -133,7 +133,7 @@ class TransactionManager(object):
 				# NOTE: buffer will get re-filled if instruction
 					# still can't start
 				
-				print "Attempting buffered '" + i + "' for transaction " + t.id
+				print "\tAttempting buffered '" + i + "' for transaction " + t.id
 				self.process_instruction(i)
 
 
@@ -223,7 +223,7 @@ class TransactionManager(object):
 			
 			if not site:
 				if t.status=="active": # if no ready site found
-					print str(t) + " must wait: no active site with applicable " + \
+					print "\t" + str(t) + " must wait: no active site with applicable " + \
 						"version found for read"				
 					t.add_unstarted_instruction_to_buffer(i)
 				elif t.status=="aborted":
@@ -279,7 +279,7 @@ class TransactionManager(object):
 					
 					# if write at this site queued 
 					if flag == globalz.Message.Wait:
-						print str(t) + " waiting for lock at " + \
+						print "\t" + str(t) + " waiting for lock at " + \
 							str(site)
 					
 					elif flag == globalz.Message.Abort:
@@ -292,7 +292,7 @@ class TransactionManager(object):
 			
 			# if no sites are active
 			if num_active == 0:
-				print "Must wait: no active site for write"
+				print "\t" + str(t) + " must wait: no active site for write"
 				t.add_unstarted_instruction_to_buffer(i)
 
 
@@ -403,7 +403,7 @@ class TransactionManager(object):
 								t.add_started_instruction_to_buffer(i,site)
 								message = site.dm.process_write(t,vid,val)
 								if message == globalz.Message.Wait:
-									print "Waiting on lock at site " + \
+									print "\t" + str(t) + " waiting on lock at site " + \
 										  str(site)
 						
 								elif message == globalz.Message.Abort:
