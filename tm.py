@@ -377,7 +377,7 @@ class TransactionManager(object):
 		elif re.match("^dump\(x\d*\)", i):
 			print "Dump of variable " + a + ":"
 			for site in self.directory[a]['sitelist']:
-				print site.name + ":" + \
+				print site.name + ": " + \
 					str(site.variables[a].get_committed_versions())
 
 		elif re.match("^querystate\(\)", i):

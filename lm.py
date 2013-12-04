@@ -1,38 +1,6 @@
 from pprint import pprint
 import globalz
 
-class LockTableEntry(object):
-	"""
-	Lock Table Entry object
-	"""
-	def __init__(self,vid):
-		self.vid = vid # the variable this lock is on
-		self.lock = 'n' # 'w' for exclusive, 'r' for shared
-		self.locking_ts = [] # list of transactions currently holding the lock on this var
-		self.q = [] # list of transactions waiting to receive a lock on this var
-	
-	def __repr__(self):
-		result = "{lock type:" + self.lock + "; " + "held by:"
-		for t in self.locking_ts:
-			result += str(t) + " "
-		result += "; " + "queue:" + str(self.q) + "}"
-		return result
-	
-	def __str__(self):
-		return self.vid
-	
-		
-class QueueEntry(object):
-	def __init__(self,transaction,r_type,value):
-		self.transaction = transaction
-		self.r_type = r_type
-		self.value = None
-		if r_type == 'w':
-			self.value = value
-
-	def __repr__(self):
-		return '{' + str(self.transaction) + ', ' + self.r_type + '}'
-
 class LockManager(object):
 	"""
 	Lock manager object	
@@ -49,13 +17,13 @@ class LockManager(object):
 		#		for which transaction has locks
 		self.transaction_locks = {}
 
-
 	def print_lock_table(self):
 		pprint(self.lock_table) 
 
 	def reset_lock_table(self):
 		for vid in self.lock_table.keys( ):
 			self.lock_table[vid] = LockTableEntry(vid)
+
 
 	def update_queue(self,var):
 		q = self.lock_table[var].q
@@ -217,3 +185,36 @@ class LockManager(object):
 				return globalz.Message.Wait
 			else:
 				return globalz.Message.Abort
+
+
+class LockTableEntry(object):
+	"""
+	Lock Table Entry object
+	"""
+	def __init__(self,vid):
+		self.vid = vid # the variable this lock is on
+		self.lock = 'n' # 'w' for exclusive, 'r' for shared
+		self.locking_ts = [] # list of transactions currently holding the lock on this var
+		self.q = [] # list of transactions waiting to receive a lock on this var
+	
+	def __repr__(self):
+		result = "{lock type:" + self.lock + "; " + "held by:"
+		for t in self.locking_ts:
+			result += str(t) + " "
+		result += "; " + "queue:" + str(self.q) + "}"
+		return result
+	
+	def __str__(self):
+		return self.vid
+	
+		
+class QueueEntry(object):
+	def __init__(self,transaction,r_type,value):
+		self.transaction = transaction
+		self.r_type = r_type
+		self.value = None
+		if r_type == 'w':
+			self.value = value
+
+	def __repr__(self):
+		return '{' + str(self.transaction) + ', ' + self.r_type + '}'

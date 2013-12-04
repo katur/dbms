@@ -19,8 +19,8 @@ class VariableVersion(object):
 		string = '{' + str(self.value) + '; time' + \
 			str(self.time_committed) + '; '
 		if not self.available_for_read:
-			string += "un"
-		string += "available to read}"
+			string += "UN"
+		string += "avail to read}"
 		return string
 		
 		"""
