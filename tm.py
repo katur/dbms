@@ -11,7 +11,7 @@ def print_warning(instruction, reason):
 	Arguments: the faulting instruction, and the reason it is being ignored
 	Side effects: printing to console
 	"""
-	print 'ERROR: ignoring instruction "' + instruction + \
+	print 'INPUT ERROR: ignoring instruction "' + instruction + \
 		'"; ' + reason
 
 class TransactionManager(object):
