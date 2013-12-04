@@ -40,11 +40,22 @@ python program.py < input.txt
 - start_time: clock time when transaction was created
 - is_read_only Boolean
 - instruction_buffer
-	* pending instruction not completed (due to no active site, or blocked on locks)
+	* any pending instruction not completed (either not started due to no active site, or started but blocked on locks)
+- instruction_in_progress
+	* Boolean of whether the instruction in instruction buffer is started or unstared (if unstarted, will just be attempted at clock tick. If started, is handled by particular triggers: site failure, site recovery, or lock release)
+- sites_in_progress
+	* also just related to buffered instruction, this is a list of [site, written], i.e. the sites that that an in-progress transaction is waiting to read to, or is waiting to or already written to
 - sites_accessed list
+	* for read-write only
 	* list of tuples, each tuple being a site that was accessed and the initial time of access. needed for available copies algorithm
-- blocking_locks: list of locks the transactions is enqueued waiting for. Note that this list must be updated when the transaction is dequeued, or if the site fails.
+- impossible_sites
+	* for read-only only
+	* list of sites the transaction has deemed impossible to read from due to their being no old enough, committed, avail to read versions
+	* used to determine if RO should abort if ALL sites are impossible
 - add_site_access(self,site): adds a site w/current clock if not in sites_accessed
+- grant_lock(self,site): simply update sites_in_progress to reflect a lock being granted (and therefore the write occurring)
+- reset_buffer, add_started_instruction_to_buffer, and add_unstarted_instruction_to_buffer
+	* updates the instruction buffer and related fields (instruction_in_progress and sites_in_progress) based on instruction completion, instruction being deemed unstarted, and instruction starting, respectively
 
 ### Transaction\_Manager object
 - directory dictionary
