@@ -116,7 +116,7 @@ This is simply an updated version of the previously submitted spec.
 - time_committed: the time this version was committed (False if not committed)
 - available_for_read: Boolean of whether or not this version is available to read (versus not available to read, due to failure)
 
-#### DataManager object
+#### DataManager object (one per Site)
 - site: the site the DM is managing 
 - lm: lock manager for this data manager
 - get_read_version(self,t,vid)
@@ -146,7 +146,7 @@ This is simply an updated version of the previously submitted spec.
 	 * release the locks for this transaction. Could delete its uncommitted writes at this point, but we're keeping them in for debugging purposes.
 
 
-#### Lock Manager object
+#### LockManager object (one per DataManager)
 - lock_table: dictionary keyed on var present at the site, value a lock table entry
 - transaction_locks: dictionary keyed on transactions holding locks at this site, value a list of the vars the transaction has locks on at this site.
 - request_lock(self,t,vid,r_type,value)
@@ -164,13 +164,13 @@ This is simply an updated version of the previously submitted spec.
 - reset_lock_table(self)
 	* reset lock table (to use after site failure)
 
-#### Lock Table Entry object
+#### LockTableEntry object
 - vid: the variable id this lock is on
 - lock: 'w' for exclusive, 'r' for shared, 'n' for not locked right now
 - locking_ts: list of transcations currently holding the lock on this var
 - q: queue of QueueEntry objects, i.e., transactions waiting on this lock along with some information regarding the lock request
 
-#### Queue Entry object
+#### QueueEntry object
 - transaction: the transcation waiting
 - r_type: whether read or write
 - value: the value to be written, if any
