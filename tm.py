@@ -359,6 +359,7 @@ class TransactionManager(object):
 			for site in globalz.sites:
 				site.print_site_state()
 				site.dm.lm.print_lock_table()
+
 		
 		###############################
 		# IF NOT AN INSTRUCTION ABOVE #
