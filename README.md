@@ -80,7 +80,7 @@ python program.py < input.txt
 	* R(T,var)
 		+ use directory to look up the next active, applicable read site for var
 		+ if no active sites, buffer the instruction to perform later
-		+ If an active site is found, send read request message to the corresponding DM, specifying if the transaction is RO or RW. If DM responds with the value read, print to console. If DM responds that the transaction was killed due to wait-die, take appropriate actions and print this info to console. Or, if instruction is waiting on a lock, possibly print this to console (and note that some subsequent DM response will include the value read).
+		+ If an active site is found, send read request message to the corresponding DM, specifying if the transaction is RO or RW. If DM responds with the value read, print to console. If DM responds that the transaction was killed due to wait-die, take appropriate actions and print this info to console. Or, if instruction is waiting on a lock, print this to console (NOTE: some subsequent DM response will perform the read).
 	* W(T,var,value)
 		+ use directory to look up all active sites with var. Send write request messages to all corresponding DMs. If none available, save the write instruction in T.instruction_buffer.
 	* fail(site)

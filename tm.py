@@ -259,16 +259,29 @@ class TransactionManager(object):
 			t = self.transactions[tid]			
 			if t.instruction_buffer:
 				print_warning(i,"new instruction received while one pending")
-			
+		
+			# get all sites where this var is present
+			#		keeping track of how many are active,
+			#		and also relaying write command to the dm
+			#		at any active site
 			site_list = self.directory[vid]['sitelist']
 			num_active = len(site_list)
+
+			# add all active as started access sites
+			for site in site_list:
+				if site.active:
+					t.add_started_instruction_to_buffer(i,site)
+			
+			# for all active sites, relay the write to dm
+			#		and possibly take wait-die actions
 			for site in site_list:
 				if site.active:				
 					flag = site.dm.process_write(t,vid,val)
+					
+					# if write at this site queued 
 					if flag == globalz.Message.Wait:
 						print str(t) + " waiting for lock at " + \
 							str(site)
-						t.add_started_instruction_to_buffer(i,site)
 					
 					elif flag == globalz.Message.Abort:
 						self.abort_transaction(t,"wait-die")
@@ -278,6 +291,7 @@ class TransactionManager(object):
 				else:
 					num_active -= 1					
 			
+			# if no sites are active
 			if num_active == 0:
 				print "Must wait: no active site for write"
 				t.add_unstarted_instruction_to_buffer(i)
@@ -387,11 +401,11 @@ class TransactionManager(object):
 								tid,vid,val = [x.strip() for x in a.split(',')]
 								val = int(val)
 							if site in self.directory[vid]['sitelist']:
+								t.add_started_instruction_to_buffer(i,site)
 								message = site.dm.process_write(t,vid,val)
 								if message == globalz.Message.Wait:
 									print "Waiting on lock at site " + \
 										  str(site)
-									t.add_started_instruction_to_buffer(i,site)
 						
 								elif message == globalz.Message.Abort:
 									self.abort_transaction(t,"wait-die")			
