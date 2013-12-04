@@ -45,7 +45,6 @@ class LockManager(object):
 			self.lock_table[var].lock = 'r' # apply shared lock to var
 			while len(q) > 0 and q[0].r_type == 'r':				
 				q_entry = q.pop(0) # pop t from queue
-				print q_entry
 				t = q_entry.transaction
 				#print 'assigning shared lock on ' + var + ' to ' + str(t)
 				self.lock_table[var].locking_ts.append(t) # assign shared lock to t
