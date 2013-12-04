@@ -67,6 +67,8 @@ class LockManager(object):
 				t = q_entry.transaction
 				print 'assigning shared lock on ' + var + ' to ' + str(t)
 				self.lock_table[var].locking_ts.append(t) # assign shared lock to t
+				if not t in self.transaction_locks:
+					self.transaction_locks[t] = []
 				self.transaction_locks[t].append(var) # assign shared lock to t
 				self.dm.do_read(t,var) # get and print read result
 				t.grant_lock(self.dm.site) # update t 
