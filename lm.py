@@ -52,7 +52,8 @@ class LockManager(object):
 		pprint(self.lock_table) 
 
 	def reset_lock_table(self):
-		self.lock_table = {}
+		#self.lock_table = {}
+		return
 
 	"""
 	def update_queue(self,vid):
@@ -122,7 +123,8 @@ class LockManager(object):
 				return False
 		lt_entry.q.append(QueueEntry(t,r_type,val))
 		return True		
-	
+
+
 	def release_locks(self,t):
 		"""
 		Release all the locks at this site
