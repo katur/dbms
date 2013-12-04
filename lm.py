@@ -47,7 +47,7 @@ class LockManager(object):
 				q_entry = q.pop(0) # pop t from queue
 				print q_entry
 				t = q_entry.transaction
-				print 'assigning shared lock on ' + var + ' to ' + str(t)
+				#print 'assigning shared lock on ' + var + ' to ' + str(t)
 				self.lock_table[var].locking_ts.append(t) # assign shared lock to t
 				if not t in self.transaction_locks:
 					self.transaction_locks[t] = []
@@ -59,7 +59,7 @@ class LockManager(object):
 			self.lock_table[var].lock = 'w' # apply exclusive lock to var
 			q_entry = q.pop(0)# pop t from queue
 			t = q_entry.transaction
-			print 'assigning exclusive lock on ' + var + ' to ' + str(t)			
+			#print 'assigning exclusive lock on ' + var + ' to ' + str(t)			
 			self.lock_table[var].locking_ts = [t] # assign exclusive lock to t	
 			if not t in self.transaction_locks:
 				self.transaction_locks[t] = []
