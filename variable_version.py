@@ -16,14 +16,24 @@ class VariableVersion(object):
 		return str(self.value)
 	
 	def __repr__(self):
-		string = '{' + str(self.value) + ' @ time ' + \
-			str(self.time_committed) + ' by ' + str(self.written_by)
+		string = '{' + str(self.value) + '; time' + \
+			str(self.time_committed) + '; '
+		if not self.available_for_read:
+			string += "un"
+		string += "available to read}"
+		return string
+		
+		"""
+		# more elaborate version:
+		string = '{' + str(self.value) + ' written by ' + \
+			str(self.written_by) + ' @ time ' + \
+			str(self.time_committed)
 		if self.is_committed:
 			string += ", committed, "
 		else:
-			string += ", not committed, "
+			string += ", NOT committed, "
 		if not self.available_for_read:
 			string += "un"
-		string += "available for read}"
+		string += "available to read} "
 		return string
-		
+		"""

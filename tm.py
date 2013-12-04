@@ -361,23 +361,24 @@ class TransactionManager(object):
 		#  DUMPS  #
 		###########
 		elif re.match("^dump\(\)", i):
-			print "Dump of all copies all var all sites:"
+			print "Dump of all committed versions of all " + \
+				"variables at all sites"
 			for site in globalz.sites:
 				print site.name
-				site.print_committed_variables()
+				site.print_committed_variable_versions()
 
 		elif re.match("^dump\(\d*\)", i):
 			print "Dump of site " + a + ":"
 			index = int(a) - 1
 			site = globalz.sites[index]
 			print site.name
-			site.print_committed_variables()
+			site.print_committed_variable_versions()
 
 		elif re.match("^dump\(x\d*\)", i):
 			print "Dump of variable " + a + ":"
 			for site in self.directory[a]['sitelist']:
 				print site.name + ":" + \
-					str(site.variables[a].get_committed_version().value)
+					str(site.variables[a].get_committed_versions())
 
 		elif re.match("^querystate\(\)", i):
 			print "TM'S TRANSACTIONS:"

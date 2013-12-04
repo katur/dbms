@@ -31,12 +31,10 @@ class Site(object):
 		print string
 		pprint(self.variables)
 
-	def print_committed_variables(self):
-		for variable in self.variables.values():
+	def print_committed_variable_versions(self):
+		for variable in sorted(self.variables.values()):
 			print(variable.name + ":"),
-			for version in variable.versions:
-				if version.is_committed:
-					print(version.value),
-					break
-			print(";"),
+			version_list = variable.get_committed_versions(),
+			for version in version_list:
+				print version
 		print "\n"
