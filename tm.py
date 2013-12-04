@@ -288,8 +288,10 @@ class TransactionManager(object):
 								none_granted = False
 							else:
 								all_granted = False
-						if all_granted or none_granted:
+						if all_granted:
 							t.reset_buffer( )
+						elif none_granted:
+							t.instruction_in_progress = False
 						
 								
 
