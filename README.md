@@ -82,15 +82,16 @@ python program.py < input.txt
 		+ if no active sites, buffer the instruction to perform later
 		+ If an active site is found, send read request message to the corresponding DM, specifying if the transaction is RO or RW. If DM responds with the value read, print to console. If DM responds that the transaction was killed due to wait-die, take appropriate actions and print this info to console. Or, if instruction is waiting on a lock, print this to console (NOTE: some subsequent DM response will perform the read).
 	* W(T,var,value)
-		+ use directory to look up all active sites with var. Send write request messages to all corresponding DMs. If none available, save the write instruction in T.instruction_buffer.
+		+ use directory to look up all active sites with var. Send write request messages to all corresponding DMs. If none available, save the write instruction in T.instruction_buffer. If wait or die triggered, take appropraite actions.
 	* fail(site)
 		+ mark the site as failed
 		+ clear lock table
 		+ mark all replicated variable's versions as not available_for_read (Note: could just delete them, but we're keeping them for debugging purposes)
+		+ update any transactions with in-progress reads/writes in response to the failure (if read, should start over since not pending locks on other sites; if write, should be removed from progress list and transaction either restarted or finished if empty or all written)
 	* recover(site)
-		+ mark the site as active
-		+ see if any transcations waiting on write should be writing to the newly recovered site 
-	* dump(), dump(site), dump(var), querystate(): dump info to console
+		+ mark the site as active, w/current activation time
+		+ find any transactions with in-progress writes on a var present at this site, and add the recovered site to the write
+	* dump(), dump(site), dump(var), querystate(), transactions(): dump info to console
 
 ### Site object (10 total)
 - name: this site's name (e.g. "site1")

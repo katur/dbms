@@ -1,4 +1,4 @@
-// none should abort, but reads can't read
+// no RW should abort, but reads can't read. the RO should abort.
 
 begin(T1)
 begin(T2)
