@@ -270,7 +270,7 @@ class TransactionManager(object):
 					print "Site " + a + " failed"
 					
 					# update any transactions with in-progress reads/writes
-					#		on this site in repsonse to the failure
+					#		on this site in response to the failure
 					for t in self.transactions.values():
 						# if a pending instruction
 						if t.instruction_buffer and t.instruction_in_progress:
@@ -286,7 +286,7 @@ class TransactionManager(object):
 
 								# if this site present in sites_in_progress,
 								#		simply mark it to restart on next clock tick
-								for site_entry in t.sites_in_progress:
+								for site_entry in t.sites_in_progress: # should just be 1
 									if site_entry[0] == site:
 										t.add_unstarted_instruction_to_buffer(i)	
 							
@@ -303,15 +303,18 @@ class TransactionManager(object):
 								for site_entry in t.sites_in_progress:
 									if site_entry[1] == True:
 										num_written += 1
-									if site_entry[0] == site:
-										if site_entry[1] == False:
-											t.sites_in_progress.remove(site)
+									if site_entry[0]==site and site_entry[1]==False:
+										t.sites_in_progress.remove(site)
 							
 								# if list is now empty, 
 								if not t.sites_in_progress:
 									t.add_unstarted_instruction_to_buffer(i)
 								
-								# if list is now filled with written values
+								# if list is now filled with written values,
+								#		the instruction is done and the transaction can move on
+								# NOTE: this step is so that if a site fails while a
+								#		transaction is waiting to write to it but hasn't
+								#		yet written to it, it need not abort.
 								if len(t.sites_in_progress) == num_written:
 									t.reset_buffer()
 								
@@ -331,10 +334,11 @@ class TransactionManager(object):
 					site.active = True
 					site.activation_time = globalz.clock 
 					print "Site " + a + " recovered"
-					#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-					# here, have to add the recovered,
-					# pending site to replicated, in-progress writes
-					#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					
+					# find all transactions that are in the middle of writing variables
+					#		(i.e. waiting on locks), and see if the newly
+					#		recovered site should be added to their list of sites to 
+					#		write to
 					for t in self.transactions.values():
 						if t.instruction_buffer and t.instruction_buffer[0] == 'W':
 							args = re.search("\((?P<args>.*)\)", t.instruction_buffer)
@@ -354,7 +358,7 @@ class TransactionManager(object):
 											
 
 		###########
-		# IF DUMP #
+		#  DUMPS  #
 		###########
 		elif re.match("^dump\(\)", i):
 			print "Dump of all copies all var all sites:"
