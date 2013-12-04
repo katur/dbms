@@ -99,11 +99,11 @@ class TransactionManager(object):
 		t.status = "committed"
 		
 		if t.is_read_only: # if read only, not much to do!
-			print "Committed RO transaction " + a
+			print "Committed RO transaction " + str(t)
 		else: # if read-write
 			for site,access_time in t.sites_accessed:
 				site.dm.process_commit(t)
-			print "Committed transaction" + a
+			print "Committed transaction" + str(t)
 
 
 	def attempt_unstarted_buffered_instructions(self):
