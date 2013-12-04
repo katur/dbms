@@ -47,7 +47,7 @@ class DataManager(object):
 
 
 	def print_write_result(self,t,val,vid):
-		print "\t" + str(t) + " wrote " + vid + "=" + str(val) + " at " + str(self.site) + "(uncommitted)"
+		print "\t" + str(t) + " wrote " + vid + "=" + str(val) + " at " + str(self.site) + " (uncommitted)"
 
 
 	def process_ro_read(self,t,vid):
