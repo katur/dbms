@@ -16,7 +16,9 @@ python program.py < input.txt
 
 
 ## Updated Project Specification 
-#### (listing functions and data members of modules/classes)
+
+Note: This is separate from our higher-level design document.
+This is simply an updated version of the previously submitted spec.
 
 #### Main program
 - call initialize() function to initialize the data in the sites, create the TM's variable directory, and create lock objects for each var at each site, per the spec.
