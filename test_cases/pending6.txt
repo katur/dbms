@@ -1,0 +1,11 @@
+// T1 should abort (wait-die). 
+// T2 should be fine but should read x1=10 after failure,
+// and have started just retrying every clock tick 
+// (not reading in response to failure event)
+begin(T2)
+begin(T1)
+W(T1,x1,55)
+R(T2,x1)
+fail(2)
+end(T2)
+end(T1)

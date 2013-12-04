@@ -1,6 +1,5 @@
 // T1 should add a lock request at site1 upon recovery
 
-
 fail(1)
 begin(T1)
 begin(T2)
