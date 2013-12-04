@@ -52,7 +52,8 @@ class LockManager(object):
 		pprint(self.lock_table) 
 
 	def reset_lock_table(self):
-		self.lock_table = {}
+		for vid in self.lock_table.keys( ):
+			self.lock_table[vid] = LockTableEntry(vid)
 
 	"""
 	def update_queue(self,vid):
