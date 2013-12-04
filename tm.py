@@ -205,8 +205,10 @@ class TransactionManager(object):
 			if not site:
 				if t.status=="active": # if no ready site found
 					print "Must wait: no active site with applicable " + \
-						"version found for read"
-					t.add_unstarted_transaction_to_buffer(i)
+						"version found for read"				
+					# t.add_unstarted_transaction_to_buffer(i)
+					# you meant this, right?
+					t.add_unstarted_instruction_to_buffer(i)
 				elif t.status=="aborted":
 					pass # abortion was handled in locate_read_site
 
@@ -219,7 +221,7 @@ class TransactionManager(object):
 					flag,val = site.dm.process_rw_read(t,vid)
 					
 					# if read is waiting on a lock
-					if flag == globalz.Message.wait:
+					if flag == globalz.Message.Wait:
 						print "Must wait (lock): " + i
 						t.add_started_instruction_to_buffer(i,site)
 
@@ -243,14 +245,14 @@ class TransactionManager(object):
 			site_list = self.directory[vid]['sitelist']
 			num_active = len(site_list)
 			for site in site_list:
-				if site.active:
+				if site.active:				
 					flag = site.dm.process_write(t,vid,val)
-					if flag == globalz.Message.wait:
+					if flag == globalz.Message.Wait:
 						print "Waiting on lock at site " + \
 							str(site)
 						t.add_started_instruction_to_buffer(i,site)
 					
-					elif flag == globalz.Message.abort:
+					elif flag == globalz.Message.Abort:
 						self.abort_transaction(t,"wait-die")
 						return
 					# NOTE: success handled within dm
@@ -298,6 +300,20 @@ class TransactionManager(object):
 					# at clock tick, or for replicated writes,
 					# seeing if the site list is empty
 					# ~~~~~~~~~~~~~~~~~~~~~~~~
+					for t in self.transactions:
+						all_granted = True
+						none_granted = True					
+						for site_entry in t.sites_in_progress:
+							if site_entry[0] == site:	
+								site_entry[1] = False
+							if site_entry[1]:
+								none_granted = false
+							else:
+								all_granted = false
+						if all_granted or none_granted:
+							t.reset_buffer( )
+						
+								
 
 		###################
 		# IF RECOVER SITE #
@@ -318,6 +334,23 @@ class TransactionManager(object):
 					# here, have to add the recovered,
 					# pending site to replicated, in-progress writes
 					#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					for t in self.transactions:
+						if t.instruction_buffer and t.instruction_buffer[0] == 'W':
+							args = re.search("\((?P<args>.*)\)", t.instruction_buffer)
+							if args:
+								a = args.group('args')
+								tid,vid,val = [x.strip() for x in a.split(',')]
+								val = int(val)
+							if site in self.directory[vid]['sitelist']:
+								message = site.dm.process_write(t,vid,val)
+								if message == globalz.Message.Wait:
+									print "Waiting on lock at site " + \
+										  str(site)
+									t.add_started_instruction_to_buffer(i,site)
+						
+								elif message == globalz.Message.Abort:
+									self.abort_transaction(t,"wait-die")			
+											
 
 		###########
 		# IF DUMP #

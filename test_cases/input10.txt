@@ -1,0 +1,18 @@
+// T1 has started, should wait pending a lock on a replicated var.
+// No sites fail
+// Both transactions should commit.
+// begin(T1)
+// begin(T2)
+// R(T1,x1)
+// R(T2,x2)
+// W(T1,x2,101)
+// end(T2)
+// end(T1)
+
+begin(T1)
+begin(T2)
+R(T1,x1)
+R(T2,x2)
+W(T1,x2,101)
+end(T2)
+end(T1)

@@ -4,7 +4,7 @@ from tm import TransactionManager
 
 # gives the result of a lock request 
 class Message:
-	abort, wait, success = range(3)	
+	Abort, Wait, Success = range(3)	
 
 # global clock
 clock = 0

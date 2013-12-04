@@ -94,7 +94,7 @@ class DataManager(object):
 		# try to get the lock
 		request_result = self.lm.request_lock(t,vid,'r',None)
 		
-		if request_result == globalz.Message.success:
+		if request_result == globalz.Message.Success:
 			read_result = self.do_read(t,vid)
 			return [request_result, read_result]
 		
@@ -113,8 +113,23 @@ class DataManager(object):
 		version_list.insert(0,new_version)
 
 		# alert console that it was written
-		print_write_result(t,val,vid)		
+		self.print_write_result(t,val,vid)		
 
+		# update t's sites in progress list
+		# to show that the lock has been
+		# obtained at present site
+		t.grant_lock(self.site)
+
+		# reset t's instruction buffer
+		# if all writes at all pending sites
+		# have completed
+		instruction_complete = True
+		for s,lock_granted in t.sites_in_progress:
+			if not lock_granted:
+				instruction_complete = False
+		if instruction_complete:
+			t.reset_buffer( )
+			
 
 	def process_write(self,t,vid,val):
 		"""
@@ -125,7 +140,7 @@ class DataManager(object):
 			- val: the value to be written
 		"""
 		request_result = self.lm.request_lock(t,vid,'w',val)
-		if request_result == globalz.Message.success:
+		if request_result == globalz.Message.Success:
 			self.apply_write(t,vid,val)
 		return request_result
 	
