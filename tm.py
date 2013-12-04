@@ -141,6 +141,11 @@ class TransactionManager(object):
 	def process_instruction(self, i):
 		"""
 		Process an input instruction
+		Argument: an instruction (parsed from an input line)
+		Return value: none
+		Side effects: numerous! the instruction gets processed,
+			changing many data structures and calling many other
+			modules to perform work along the way
 		"""	
 		# get whatever is between parens
 		args = re.search("\((?P<args>.*)\)", i)
@@ -221,8 +226,6 @@ class TransactionManager(object):
 				if t.status=="active": # if no ready site found
 					print str(t) + " must wait: no active site with applicable " + \
 						"version found for read"				
-					# t.add_unstarted_transaction_to_buffer(i)
-					# you meant this, right?
 					t.add_unstarted_instruction_to_buffer(i)
 				elif t.status=="aborted":
 					pass # abortion was handled in locate_read_site
