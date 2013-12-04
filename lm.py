@@ -55,7 +55,6 @@ class LockManager(object):
 		for vid in self.lock_table.keys( ):
 			self.lock_table[vid] = LockTableEntry(vid)
 
-
 	def update_queue(self,var):
 		q = self.lock_table[var].q
 		if len(q) == 0:
@@ -145,6 +144,14 @@ class LockManager(object):
 					lt_entry.lock = 'w'
 					return globalz.Message.Success
 				else:
+					# release t's shared lock
+					lt_entry.locking_ts.remove(t)
+					for i in range(len(t.sites_in_progress)):
+						if t.sites_in_progress[i][0] == site:
+							t.sites_in_progress[i][1] = False
+							break
+					self.transaction_locks[t].remove(vid)
+							
 					enqueue_result = self.enqueue_transaction(t,vid,r_type,value)
 					if enqueue_result:
 						return globalz.Message.Wait
