@@ -94,9 +94,16 @@ class LockManager(object):
 		"""
 		Release all the locks at this site
 		held by t.
+		
+		side effects: if t was the only transaction holding a lock
+					  on some variable, then upon releasing 
+					  that variable's queue will be updated, and 
+					  new locks potentially granted, per function
+					  @update_queue
+		
 		"""	
 		for var in self.transaction_locks[t]:
-			# print "releasing a lock on " + var
+			 print "\t" str(t) + " releasing a lock on " + var
 			if t in self.lock_table[var].locking_ts:
 				self.lock_table[var].locking_ts.remove(t)
 			#else:
@@ -108,9 +115,21 @@ class LockManager(object):
 	def request_lock(self,t,vid,r_type,value):
 		"""
 		Request a lock to read/write a variable.
+		
+		@t: The transaction requesting a lock
+		@vid: Name of the variable being read/written to
+		@r_type: 'r' if request for a shared (read) lock,
+				 else 'w' for an exclusive (write) lock
+		@value: if the request is for a write lock,
+				the value to be written
+		
 		Note: this fxn called on any RW transaction's
 			reads or writes (covers the case of it 
 			already having a lock)
+			
+		returns a globalz.Message instance indicating whether
+		the request was successful, will cause t to wait,
+		or will cause t to abort
 		"""
 		lt_entry = self.lock_table[vid]
 		
@@ -161,6 +180,13 @@ class LockManager(object):
 		"""
 		This fxn called by request_lock
 		if a read lock is needed.
+		
+		@t: the transaction requesting the lock
+		@vid: name of the variable to be read
+		
+		returns a globalz.Message instance indicating whether
+		the request was successful, will cause t to wait,
+		or will cause t to abort		
 		"""
 		# if currently a shared lock on variable
 		if self.lock_table[vid].lock == 'r' and len(self.lock_table[vid].q) == 0:
@@ -186,6 +212,14 @@ class LockManager(object):
 		"""
 		This fxn called by request_lock
 		if a write lock is needed.
+		
+		@t: the transaction requesting the lock
+		@vid: name of the variable to be written to
+		@value: the value to be written		
+		
+		returns a globalz.Message instance indicating whether
+		the request was successful, will cause t to wait,
+		or will cause t to abort		
 		"""
 		for locking_t in self.lock_table[vid].locking_ts:
 			if locking_t.start_time < t.start_time:
@@ -220,9 +254,9 @@ class LockTableEntry(object):
 		
 class QueueEntry(object):
 	def __init__(self,transaction,r_type,value):
-		self.transaction = transaction
-		self.r_type = r_type
-		self.value = None
+		self.transaction = transaction # transaction waiting for lock
+		self.r_type = r_type # 'r' if transaction requesting a shared lock, else 'w'
+		self.value = None # if write request, the value to be written
 		if r_type == 'w':
 			self.value = value
 
