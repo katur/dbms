@@ -21,10 +21,9 @@ python program.py < input.txt
 - loop:
 	* input a line from stdin (skipping if whitespace or a comment)
 	* increment time
-	* try all pending instructions (site.dm.try_pending())
+	* re-try all unstarted, pending instructions
 	* parse the new input line, splitting on semicolon
 	* send each instructions to the tm to execute (tm.process_instruction)
-- finally, loop until no more pending instructions
 
 ### Globals
 - clock:

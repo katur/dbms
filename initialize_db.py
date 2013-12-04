@@ -4,6 +4,14 @@ from lm import LockTableEntry
 from globalz import sites, tm
 
 def initialize():
+	"""
+	Initialize the database to the state designated
+		in the spec.
+	No args or return value.
+	Side effect: creates variables and versions and inserts
+		them at sites, and adds corresponding entries
+		to the tm directory and the lock tables.
+	"""
 	def initialize_variable(var_name,site,val):
 		var = Variable(var_name)
 		vers = VariableVersion(val, 0, None, True)

@@ -3,6 +3,15 @@ import globalz
 from initialize_db import initialize
 from collections import Counter
 
+"""
+This is the main program to be run.
+After initializing the database state,
+	it accepts a line at a time from standard
+	input, and handles incrementing the clock,
+	attempting pending instructions, and sending
+	each new instruction to the transaction manager.
+"""
+
 # initialize data in sites, and tm directory
 initialize()
 
@@ -20,6 +29,7 @@ while line:
 		# re-try unstarted pending instructions
 		globalz.tm.attempt_unstarted_buffered_instructions()
 	
+		# print the line to console (for clarity)
 		print ">>" + line.strip()
 
 		# parse new instruction(s) from input line
