@@ -361,6 +361,10 @@ class TransactionManager(object):
 			for site in globalz.sites:
 				site.print_site_state()
 				site.dm.lm.print_lock_table()
+		
+		elif re.match("^transactions\(\)", i):
+			print "TM'S TRANSACTIONS:"
+			self.print_transactions()
 
 		
 		###############################
