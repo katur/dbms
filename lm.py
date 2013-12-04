@@ -96,8 +96,7 @@ class LockManager(object):
 		"""
 		lt_entry = self.lock_table[vid]
 		for q_entry in lt_entry.q:
-			if((r_type=='w' or q_entry.r_type=='w') and
-			q_entry.t.start_time < t.start_time):
+			if((r_type=='w' or q_entry.r_type=='w') and q_entry.transaction.start_time < t.start_time):
 				return False
 		lt_entry.q.append(QueueEntry(t,r_type,val))
 		return True		
