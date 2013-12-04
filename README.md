@@ -151,11 +151,13 @@ python program.py < input.txt
 #### Lock Manager object
 - lock_table: dictionary keyed on var present at the site, value a lock table entry
 - transaction_locks: dictionary keyed on transactions holding locks at this site, value a list of the vars the transaction has locks on at this site.
-- enqueue_transaction
-- release_locks
-- request_read_lock
-- request_write_lock
-- request_lock
+- reset_lock_table(self)
+- update_queue(self,var)
+- enqueue_transaction(self,t,vid,r_type,val)
+- release_locks(self,t)
+- request_lock(self,t,vid,r_type,value)
+- request_read_lock(self,t,vid)
+- request_write_lock(self,t,vid,value)
 
 #### Lock Table Entry object
 - var: the var this lock is on
