@@ -97,7 +97,7 @@ class LockManager(object):
 		if r_type == 'w' or self.lock_table[vid].lock == 'w':
 			for t2 in self.lock_table[vid].locking_ts:
 				if t2.start_time < t.start_time:
-					return false
+					return False
 					
 		lt_entry = self.lock_table[vid]
 		for q_entry in lt_entry.q:
