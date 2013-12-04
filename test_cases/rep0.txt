@@ -1,0 +1,28 @@
+// T1 should find site 10 to read repl var, 
+// T2 should find site 10 to write repl var,
+// T3 should find site 10 to read non-repl var,
+// T4 should find site 10 to write non-repl var
+// T4 should wait (not die) b/c older
+	
+begin(T1)
+begin(T2)
+begin(T4)
+begin(T3)
+fail(1)
+fail(2)
+fail(3)
+fail(4)
+fail(5)
+fail(6)
+fail(7)
+fail(8)
+fail(9)
+R(T1,x2)
+W(T2,x4,36)
+R(T3,x9)
+W(T4,x9,336)
+end(T1)
+end(T2)
+end(T3)
+end(T4)
+dump()

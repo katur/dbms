@@ -1,0 +1,18 @@
+// T1 should wait for site2 to read x1
+// T2 should wait for site4 to write x3
+	
+begin(T1)
+begin(T2)
+fail(2)
+fail(4)
+R(T1,x1)
+W(T2,x3,333)
+begin(T3)
+begin(T4)
+recover(4)
+recover(2)
+end(T1)
+end(T2)
+end(T3)
+end(T4)
+dump()
