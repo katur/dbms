@@ -1,0 +1,21 @@
+// since all sites down, T1 shoudl wait, but eventuall write x4 from site 4
+// T2 should be able to achieve the x4 read at this point
+// T3 shoudl not be able to achieve the x2 read though, since even though a site it up, it has not been written
+// it should not be able to achieve that read until T4 commits
+
+// note: if swap so T1 older than T2, T2 should die from wait-die
+
+begin(T2)
+begin(T1)
+begin(T3)
+fail(1);fail(2);fail(3);fail(4);fail(5);fail(6);fail(7);fail(8);fail(9);fail(10)
+W(T1,x4,333)
+R(T2,x4)
+R(T3,x2)
+recover(4)
+end(T1)
+end(T2)
+begin(T4)
+W(T4,x2,555)
+end(T4)
+end(T3)
