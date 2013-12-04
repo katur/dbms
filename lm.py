@@ -102,7 +102,7 @@ class LockManager(object):
 		if r_type == 'w' or self.lock_table[vid].lock == 'w':
 			for t2 in self.lock_table[vid].locking_ts:
 				if t2.start_time < t.start_time:
-					return False
+					return False		
 					
 		lt_entry = self.lock_table[vid]
 		for q_entry in lt_entry.q:
@@ -185,7 +185,7 @@ class LockManager(object):
 		if a read lock is needed.
 		"""
 		# if currently a shared lock on variable
-		if self.lock_table[vid].lock == 'r':
+		if self.lock_table[vid].lock == 'r' and len(self.lock_table[vid].q) == 0:
 			self.lock_table[vid].locking_ts.append(t)
 			if not t in self.transaction_locks:
 				self.transaction_locks[t] = []
