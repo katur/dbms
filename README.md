@@ -115,18 +115,29 @@ python program.py < input.txt
 ### DataManager object
 - site: the site the DM is managing 
 - lm: lock manager for this data manager
-- try_pending(): try all to complete all pending accesses for variables at this site (note: Katherine thinks we should switch this to instead be event driven: if a site fails, or if a site recovers, certain pending accesses might happen. Or, if a lock is released, certain actions might be performed)
+- get_read_version(self,t,vid)
+	* get the applicable read version for a read request, taking into account the site being active and having an appropriate version "available to read"
 - process_ro_read(self,t,vid): process a ro read of vid for t
-	* iterate through versions of the variable, until finding one the first committed one that is old enough
-	* while iterating, if find one not available for read, stop and return none because all preceding would also be unavailable for read
-	* if iterate all the way back to the beginning, return None (shouldn't reach this point...)
+	* get the appropriate version to read, print it, and reset the buffer
 - process_rw_read(self,t,vid): process rw read of vid for t
-	* try to get the lock. if success, find the most recently committed version, and return it. if not, the alert the tm to either abort or wait (wait-die). if wait, the lm will eventually finish and somehow alert the tm... (still need to figure this out...). Also, need to account for cases of site failure/recovery before the read has happened.
+	* try to get a lock
+	* if success, call do_read. otherwise, return the abort/wait msg
+- do_read(self,t,vid)
+	* add to sites_accessed (for available copies)
+	* get the appropriate version to read, print it, and reset buffer
 - process_write(self,t,vid,val):
-	* try to get the lock. again, if success, create a new version and insert it at the head of the list, and alert the tm. if wait/die, alert the tm. but still need to figure out how to manage the write happening later...
+	* try to get lock
+	* if success, call apply_write. otherwise, return the abort/wait msg
+- apply_write(self,t,vid,val)
+	* add to sites_accesed (for available copies)
+	* create new var version
+	* update transaction so it knows that write succeeded
+	* check if ALL the transcation's write sites have succeeded, to reset pending instruction buffer if need be
+
 - process_commit(self,t)
-	* find all the variables WRITTEN by t at this site, and mark them as committed. (this might be done wrong...), adding the commit timestamp.
+	* find all the variables written by t at this site, and mark them as committed, adding the commit timestamp.
 	* unlock all T's locks, which might result in more transactions proceeding 
+
 - process_abort(self,t)
 	 * release the locks for this transaction. Could delete its uncommitted writes at this point, but we're keeping them in for debugging purposes.
 

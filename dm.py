@@ -17,7 +17,9 @@ class DataManager(object):
 	def get_read_version(self,t,vid):
 		"""
 		read the appropriate version of variable vid at this site.
-		returns None if no appropriate version exists at the site.
+		Args: the transaction wanting to read, the variable to read
+		Return value: the value read, or None
+			if no appropriate version exists at the site.
 		"""
 		version_list = self.site.variables[vid].versions
 		for v in version_list:
