@@ -15,12 +15,10 @@ python program.py < input.txt
 ```
 
 
-## Design Document
-### *high-level overview of organization*
+### Design Document (high-level overview of organization)
 
 
-## Updated Project Specification
-### *listing all functions and data members of the various modules/classes*
+### Updated Project Specification (listing functions and data members of modules/classes)
 
 #### Main program
 - call initialize() function to initialize the data in the sites, create the TM's variable directory, and create lock objects for each var at each site, per the spec.
