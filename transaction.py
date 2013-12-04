@@ -78,7 +78,7 @@ class Transaction(object):
 	def add_started_instruction_to_buffer(self,i,site):
 		self.instruction_buffer = i
 		self.instruction_in_progress = True
-		self.sites_in_progress.append(site)
+		self.sites_in_progress.append([site,False])
 
 	def add_unstarted_instruction_to_buffer(self,i):
 		self.instruction_buffer = i
