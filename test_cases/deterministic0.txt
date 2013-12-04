@@ -1,0 +1,5 @@
+// as long as didn't read from 4, shoudl succeed
+begin(T1)
+R(T1,x2)
+fail(4)
+end(T1)
