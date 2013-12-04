@@ -1,3 +1,5 @@
+// T1 should read x1 from T3, right?
+
 begin(T1)
 begin(T2)
 begin(T3)
