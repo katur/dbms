@@ -93,15 +93,17 @@ class LockManager(object):
 		Otherwise, enqueues transaction
 		and returns True.
 		"""
+		
 		if r_type == 'w' or self.lock_table[vid].lock == 'w':
 			for t2 in self.lock_table[vid].locking_ts:
 				if t2.start_time < t.start_time:
-					return False
+					return false
+					
 		lt_entry = self.lock_table[vid]
 		for q_entry in lt_entry.q:
 			if((r_type=='w' or q_entry.r_type=='w') and q_entry.transaction.start_time < t.start_time):
 				return False
-		lt_entry.q.append(QueueEntry(t,r_type,val))
+		lt_entry.q.insert(0,QueueEntry(t,r_type,val))
 		return True		
 
 

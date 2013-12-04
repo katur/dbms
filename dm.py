@@ -141,7 +141,7 @@ class DataManager(object):
 		"""
 		request_result = self.lm.request_lock(t,vid,'w',val)
 		if request_result == globalz.Message.Success:
-			self.apply_write(t,vid,val)
+			self.apply_write(t,vid,val)			
 		return request_result
 	
 	
@@ -159,7 +159,7 @@ class DataManager(object):
 			latest_version = var.versions[0] # only need to commit most recent write
 			if latest_version.written_by == t:
 				latest_version.time_committed = globalz.clock
-				latest_version.is_committed = True
+				latest_version.is_committed = True				
 		self.lm.release_locks(t)
 		
 	
