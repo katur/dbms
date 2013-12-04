@@ -278,6 +278,7 @@ class TransactionManager(object):
 					# at clock tick, or for replicated writes,
 					# seeing if the site list is empty
 					# ~~~~~~~~~~~~~~~~~~~~~~~~
+					'''
 					for t in self.transactions.values():
 						all_granted = True
 						none_granted = True					
@@ -292,7 +293,40 @@ class TransactionManager(object):
 							t.reset_buffer( )
 						elif none_granted:
 							t.instruction_in_progress = False
-						
+					'''
+					for t in self.transactions.values():
+						# if a pending instruction
+						if t.instruction_buffer and t.instruction_in_progress:
+							i = t.instruction_buffer
+							
+							# if read
+							if re.match("^R\(.+\,.+\)", i):
+								if len(t.sites_in_progress) != 1:
+									print "warning: a read with " + \
+										"sites_in_progress not len 1"
+								for site_entry in t.sites_in_progress:
+									if site_entry[0] == site:
+										t.add_unstarted_instruction_to_buffer(i)	
+							
+							# if write
+							elif re.match("^W\(.+\,.+\,.+\)", i):
+								num_written = 0
+								for site_entry in t.sites_in_progress:
+									if site_entry[1] == True:
+										num_written += 1
+									if site_entry[0] == site:
+										if site_entry[1] == False:
+											t.sites_in_progress.remove(site)
+							
+								# if list is now empty, 
+								if not t.sites_in_progress:
+									t.add_unstarted_instruction_to_buffer(i)
+								
+								# if list is now filled with written values
+								if len(t.sites_in_progress) == num_written:
+									t.reset_buffer()
+
+
 								
 
 		###################
