@@ -152,24 +152,24 @@ class LockManager(object):
 			if not t in self.transaction_locks:
 				self.transaction_locks[t] = []
 			self.transaction_locks[t].append(vid)
-			return globalz.Message.success
+			return globalz.Message.Success
 		
 		# if transaction already holds a lock
 		elif t in lt_entry.locking_ts:
 			if lt_entry.lock == 'w': # if exclusive
-				return globalz.Message.success
+				return globalz.Message.Success
 			else: # if shared
 			# transaction requests an upgrade from shared lock to exclusive
 				# transaction holds the only shared lock on variable
 				if len(lt_entry.locking_ts) == 1:
 					lt_entry.lock = 'w'
-					return globalz.Message.success
+					return globalz.Message.Success
 				else:
 					enqueue_result = self.enqueue_transaction(t,vid,r_type,value)
 					if enqueue_result:
-						return globalz.Message.wait
+						return globalz.Message.Wait
 					else:
-						return globalz.Message.abort
+						return globalz.Message.Abort
 				
 		# if transaction wants a write
 		elif r_type == 'r':
@@ -191,18 +191,18 @@ class LockManager(object):
 			if not t in self.transaction_locks:
 				self.transaction_locks[t] = []
 			self.transaction_locks[t].append(vid)
-			return globalz.Message.success
+			return globalz.Message.Success
 		
 		else: # if currently an exclusive lock
 			locking_t = self.lock_table[vid].locking_ts[0]
 			if locking_t.start_time < t.start_time:
-				return globalz.Message.abort
+				return globalz.Message.Abort
 			enqueue_result = self.enqueue_transaction(t,vid,'r',None)
 			if enqueue_result:
 				# NOTE: katherine changed to wait from success
-				return globalz.Message.wait
+				return globalz.Message.Wait
 			else:
-				return globalz.Message.abort
+				return globalz.Message.Abort
 		
 
 	def request_write_lock(self,t,vid,value):
@@ -212,9 +212,9 @@ class LockManager(object):
 		"""
 		for locking_t in self.lock_table[vid].locking_ts:
 			if locking_t.start_time < t.start_time:
-				return globalz.Message.abort
+				return globalz.Message.Abort
 			enqueue_result = self.enqueue_transaction(t,vid,'w',value)
 			if enqueue_result:
-				return globalz.Message.wait
+				return globalz.Message.Wait
 			else:
-				return globalz.Message.abort
+				return globalz.Message.Abort

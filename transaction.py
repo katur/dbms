@@ -95,6 +95,6 @@ class Transaction(object):
 		update a transaction's sites_in_progress
 		to reflect a lock being added at a site.
 		"""
-		for s,granted_lock in t.sites_in_progress:
-			if s == site:
-				granted_lock = True
+		for i in range(len(self.sites_in_progress)):
+			if self.sites_in_progress[i][0] == site:
+				self.sites_in_progress[i][1] = True
