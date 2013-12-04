@@ -12,7 +12,7 @@ class Site(object):
 		self.name = "site" + str(number)
 		self.active = True # False means failed
 		self.activation_time = 0
-		self.variables = {}
+		self.variables = {} # keyed on var name, value Variable object
 		self.dm = DataManager(self)
 
 	def __str__(self):
