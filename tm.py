@@ -323,7 +323,7 @@ class TransactionManager(object):
 					print "Site " + a + " failed"
 					
 					# update any transactions with in-progress reads/writes
-					#		on this site in response to the failure
+					# on this site in response to the failure
 					for t in self.transactions.values():
 						# if a pending instruction
 						if t.instruction_buffer and t.instruction_in_progress:
