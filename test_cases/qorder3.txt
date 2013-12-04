@@ -1,0 +1,12 @@
+// all can get enqueued. T2 should wait for T3. T1 should wait for T2.
+
+begin(T1)
+begin(T2)
+begin(T3)
+R(T3,x1)
+W(T2,x1,999)
+R(T1,x1)
+end(T3)
+end(T2)
+end(T1)
+dump()
