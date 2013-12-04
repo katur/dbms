@@ -81,7 +81,7 @@ class TransactionManager(object):
 		else: # if read-write
 			for site,access_time in t.sites_accessed:
 				site.dm.process_commit(t)
-			print "Committed transaction" + str(t)
+			print "Committed transaction " + str(t)
 
 
 	def attempt_unstarted_buffered_instructions(self):
