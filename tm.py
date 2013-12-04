@@ -66,11 +66,11 @@ class TransactionManager(object):
 
 	def abort_transaction(self,t,reason):
 		t.status = "aborted"
+		print "Aborting transaction " + \
+			t.id + " due to " + reason
 		if not t.is_read_only:
 			for site,access_time in t.sites_accessed:
 				site.dm.process_abort(t)
-		print "Aborting transaction " + \
-			t.id + " due to " + reason
 
 
 	def commit_transaction(self,t):
@@ -79,9 +79,9 @@ class TransactionManager(object):
 		if t.is_read_only: # if read only, not much to do!
 			print "Committed RO transaction " + str(t)
 		else: # if read-write
+			print "Committed transaction " + str(t)
 			for site,access_time in t.sites_accessed:
 				site.dm.process_commit(t)
-			print "Committed transaction " + str(t)
 
 
 	def attempt_unstarted_buffered_instructions(self):
@@ -182,7 +182,7 @@ class TransactionManager(object):
 			
 			if not site:
 				if t.status=="active": # if no ready site found
-					print "Must wait: no active site with applicable " + \
+					print str(t) + " must wait: no active site with applicable " + \
 						"version found for read"				
 					# t.add_unstarted_transaction_to_buffer(i)
 					# you meant this, right?
@@ -200,7 +200,7 @@ class TransactionManager(object):
 					
 					# if read is waiting on a lock
 					if flag == globalz.Message.Wait:
-						print "Must wait (lock): " + i
+						print str(t) + " must wait for a lock at " + str(site)
 						t.add_started_instruction_to_buffer(i,site)
 
 					# if die due to wait die
