@@ -1,4 +1,4 @@
-// from class. both should commit. T2 should write at all sites.
+// from class. T2 should abort due to wait-die.
 
 begin(T1)
 begin(T2)
