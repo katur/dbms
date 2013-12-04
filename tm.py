@@ -158,7 +158,7 @@ class TransactionManager(object):
 					#		and have been up
 					for site,access_time in t.sites_accessed:
 						# if some site hasn't been up, abort
-						if not site.active or site.activation_time > access_time:
+						if (not site.active) or site.activation_time > access_time:
 							self.abort_transaction(t,"available copies algorithm")
 							return
 
