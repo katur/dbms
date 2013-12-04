@@ -61,7 +61,7 @@ This is simply an updated version of the previously submitted spec.
 - reset_buffer, add_started_instruction_to_buffer, and add_unstarted_instruction_to_buffer
 	* updates the instruction buffer and related fields (instruction_in_progress and sites_in_progress) based on instruction completion, instruction being deemed unstarted, and instruction starting, respectively
 
-#### Transaction\_Manager object
+#### TransactionManager object
 - directory dictionary
 	* keyed on variable name
 	* per var, a list with all sites including copies of that var
