@@ -226,7 +226,7 @@ class TransactionManager(object):
 				if site.active:				
 					flag = site.dm.process_write(t,vid,val)
 					if flag == globalz.Message.Wait:
-						print "Waiting on lock at site " + \
+						print str(t) + " waiting for lock at " + \
 							str(site)
 						t.add_started_instruction_to_buffer(i,site)
 					

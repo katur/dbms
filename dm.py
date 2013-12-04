@@ -40,13 +40,12 @@ class DataManager(object):
 		return None
 
 
-	def print_read_result(self,t,val):
-		print str(val) + " read from " + str(self.site) + " for " + str(t)
+	def print_read_result(self,t,val,vid):
+		print str(t) + " read " + vid + "=" + str(val) + " from " + str(self.site)
 
 
 	def print_write_result(self,t,val,vid):
-		print vid + "=" + str(val) + " written at " + str(self.site) + \
-			" for " + str(t) 
+		print str(t) + " wrote " + vid + "=" + str(val) + " at " + str(self.site)
 
 
 	def process_ro_read(self,t,vid):
@@ -58,7 +57,7 @@ class DataManager(object):
 			- vid: the variable name to be read
 		"""
 		read_result = self.get_read_version(t,vid)
-		self.print_read_result(t,read_result)
+		self.print_read_result(t,read_result,vid)
 		t.reset_buffer()
 		return read_result
 
@@ -77,7 +76,7 @@ class DataManager(object):
 
 		# if there was a result, print it
 		if read_result:
-			self.print_read_result(t,read_result)
+			self.print_read_result(t,read_result,vid)
 			t.reset_buffer()
 		
 		return read_result # might be None
@@ -152,8 +151,8 @@ class DataManager(object):
 			- t: the transaction to be committed.
 		"""
 		var_accessed = self.lm.transaction_locks[t]
-		print( str(len(var_accessed)) + " variables accessed at " +
-			  self.site.name + " to be committed" )
+		#print( str(len(var_accessed)) + " variables accessed at " +
+		#	  self.site.name + " to be committed" )
 		for vid in var_accessed:
 			var = self.site.variables[vid]
 			latest_version = var.versions[0] # only need to commit most recent write
