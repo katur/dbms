@@ -61,7 +61,7 @@ class Transaction(object):
 			string += '; buffered:' + self.instruction_buffer
 		if self.instruction_in_progress:
 			string += " in progress at sites "
-			for site in self.sites in progress:
+			for site in self.sites_in_progress:
 				string += str(site) + " "
 		
 		if self.sites_accessed:
