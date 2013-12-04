@@ -22,6 +22,14 @@ class Site(object):
 		return self.name
 
 	def print_site_state(self):
+		"""
+		Prints the status of the site
+			along with detailed information about
+			all variables present at site.
+		For debugging.
+		No args or or return value.
+		Side effect: printing to console
+		"""
 		string = str(self)
 		if self.active:
 			string += ', active since ' + str(self.activation_time)
@@ -32,6 +40,14 @@ class Site(object):
 		pprint(self.variables)
 
 	def print_committed_variable_versions(self):
+		"""
+		Print the committed variable versions present at a site.
+		NOTE: printing the version also prints whether
+			or not it's "avilable to read", because some committed
+			versions are not due to available copies algorithm
+		No args or return value.
+		Side effect: printing to console.
+		"""
 		for variable in sorted(self.variables.values()):
 			print(variable.name + ":"),
 			version_list = variable.get_committed_versions(),

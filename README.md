@@ -14,7 +14,7 @@ If input is in file `input.txt`:
 python program.py < input.txt
 ```
 
-## Design Document
+## Updated Project Specification
 
 ### Main program
 - call initialize() function to initialize the data in the sites, create the TM's variable directory, and create lock objects for each var at each site, per the spec.
@@ -33,7 +33,7 @@ python program.py < input.txt
 - tm: 1 Transaction Manager object
 - sites: list of 10 sites, named site1 through site10
 - var_ids: list of all var ids
-- Flag class: signal for result of a lock request
+- var_is_replicated(var): check if var replicated based on even/odd
 
 ### Transaction object
 - id: the transaction id
