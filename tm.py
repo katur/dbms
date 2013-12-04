@@ -285,9 +285,9 @@ class TransactionManager(object):
 							if site_entry[0] == site:	
 								site_entry[1] = False
 							if site_entry[1]:
-								none_granted = false
+								none_granted = False
 							else:
-								all_granted = false
+								all_granted = False
 						if all_granted or none_granted:
 							t.reset_buffer( )
 						
