@@ -4,6 +4,13 @@ import globalz
 from transaction import Transaction
 
 def print_warning(instruction, reason):
+	"""
+	generic printing message to print a warning to console
+		in case of unexpected input (typo, an impossible
+		instruction according to spec, etc)
+	Arguments: the faulting instruction, and the reason it is being ignored
+	Side effects: printing to console
+	"""
 	print 'ERROR: ignoring instruction "' + instruction + \
 		'"; ' + reason
 
@@ -26,7 +33,18 @@ class TransactionManager(object):
 		"""
 		Locate next active site with applicable read
 			for transaction t reading variable var_id.
-		Returns None if no active sites are found.
+		Arguments
+			- the transaction t requesting the read
+			- the id of the var it wants to read.
+		Return val
+			- a site it one is found, 
+			- or None if no active sites are found.
+		Side effects
+			- update t.next such that no single site
+				becomes a hotspot for replicated vars
+			- RO transaction might get aborted if it
+				realizes here that all 10 sites impossible
+				to read from
 		"""
 		# start with "next" position (stored in dir)
 		site_list = self.directory[vid]['sitelist']
@@ -65,21 +83,40 @@ class TransactionManager(object):
 
 
 	def abort_transaction(self,t,reason):
+		"""
+		Abort a transaction.
+		Args: the transaction and the reason
+		Side effects: the transaction is aborted,
+			and some locks may be released
+		"""
 		t.status = "aborted"
+
+		# alert to console
 		print "Aborting transaction " + \
 			t.id + " due to " + reason
+
+		# if read-write, must process the abort
+		#		at all accessed sites to release t's locks
 		if not t.is_read_only:
 			for site,access_time in t.sites_accessed:
 				site.dm.process_abort(t)
 
 
 	def commit_transaction(self,t):
+		"""
+		Commit a transaction.
+		Args: the transaction
+		Side effect: the transaction is committed,
+			and some writes may be marked as committed
+		"""
 		t.status = "committed"
 		
 		if t.is_read_only: # if read only, not much to do!
 			print "Committed RO transaction " + str(t)
 		else: # if read-write
 			print "Committed transaction " + str(t)
+
+			# call dm to mark writes as committed
 			for site,access_time in t.sites_accessed:
 				site.dm.process_commit(t)
 

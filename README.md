@@ -61,17 +61,17 @@ python program.py < input.txt
 - directory dictionary
 	* keyed on variable name
 	* per var, a list with all sites including copies of that var
-	* per var, a next counter indicating the site (list index) to try next, so that we don’t overuse any one site for reads
+	* per var, a next counter indicating the site (list index) to try next, so that we don't overuse any one site for reads
 - transactions dictionary
-	* keyed on transaction name.
-- abort_transaction(self,t)
-	* marks t as aborted and calls dm.process_abort(t) at all sites
-- num_active_transactions(self)
-- transactions_active(self): returns Boolean if any active transactions
-- update_waiting_transaction(self,t,site): for each in t.pending_accesses, remove the access if site matches site
-- locate read site: locate next read site
-- attempt_pending_instructions
-	* try all pending instructions, and clear instruction buffer (buffer might simply be filled by the same instruction again)
+	* keyed on transaction name, value is the transaction object
+- locate read site(self,t,vid): locate next read site for this variable, taking into account updating "next" field so no one site becomes a hotspot, and also examining that any selected site has a version that is committed, available to read, and old enough in the case of RO
+- abort_transaction(self,t,reason)
+	* marks t as aborted, prints why, and calls dm.process_abort(t) at all sites to relase locks
+- commit_transaction(self,t)
+	* marks t as committed and calls dm.process_commit(t) at all sites to mark writes as committed
+- attempt_unstarted_pending_instructions
+	* try all unstarted pending instructions (as if they arrived from scratch), and reset instruction buffer (buffer might simply be filled by the same instruction again)
+	* NOTE: we should modify this to not attempt these in an arbitrary order. but for the assignment, the professor said it was okay.
 - process_instruction(self, i):
 	* begin(T) or beginRO(T): create transaction with start_time=clock and RO bit set
 	* end(T)
