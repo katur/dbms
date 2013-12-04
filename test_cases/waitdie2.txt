@@ -1,4 +1,4 @@
-// both should commit. T2 should write at all sites.
+// from class. both should commit. T2 should write at all sites.
 
 begin(T1)
 begin(T2)
@@ -6,6 +6,6 @@ fail(2)
 W(T1,x4,36) everywhere but site 2
 recover(2)
 W(T2,x4,39)
-commit T1
+end(T1)
 // T2 should get rest of locks now
-commit T2
+end(T2)

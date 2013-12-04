@@ -1,5 +1,6 @@
 // T1 has not started, is requesting a write lock on a replicated var.
 // All sites went down. Some recovered, but have not been written to.
+// I think T1 should just write to sites 1 and 2, and finish that write before site 3 recovers
 
 begin(T1)
 fail(1);fail(2);fail(3);fail(4);fail(5);fail(6);fail(7);fail(8);fail(9);fail(10)

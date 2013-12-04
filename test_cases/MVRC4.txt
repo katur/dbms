@@ -1,0 +1,29 @@
+// All should abort
+// RO T4 should read 45 from x11, and 5 from x4.
+
+begin(T2)
+begin(T1)
+begin(T3)
+W(x11,T1,36)
+W(x11,T2,45)
+// T2 is older so it should wiat
+end(T1)
+// should leave T2 to obtain the locks, so x11 now 45
+
+fail(1);fail(3);fail(4);fail(5);fail(6);fail(7);fail(8);fail(9);fail(10)
+W(x4,T2,5)
+// above write only at site 2
+recover(1);recover(3);recover(4);recover(5);recover(6);recover(7);recover(8);recover(9);recover(10)
+R(T2,x7)
+// above read should be okay, since site8 is up since access
+end(T2)
+// T2's commited x11 45 should be committed, as should its x4 write at site2
+
+W(x11,T3,99)
+beginRO(T4)
+end(T3)
+// while T3's write is committed, it was committed after T1 began, so T1 should still read 45
+R(T4,x11)
+R(T4,x4)
+// above should correctly find the only site with a valid value: 5
+end(T4)
