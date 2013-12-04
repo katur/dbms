@@ -30,6 +30,8 @@ class QueueEntry(object):
 		if r_type == 'w':
 			self.value = value
 
+	def __repr__(self):
+		return '{' + str(self.transaction) + ', ' + self.r_type + '}'
 
 class LockManager(object):
 	"""
@@ -63,7 +65,8 @@ class LockManager(object):
 		if q[0].r_type == 'r':
 			self.lock_table[var].lock = 'r' # apply shared lock to var
 			while len(q) > 0 and q[0].r_type == 'r':				
-				q_entry = q.pop( ) # pop t from queue
+				q_entry = q.pop(0) # pop t from queue
+				print q_entry
 				t = q_entry.transaction
 				print 'assigning shared lock on ' + var + ' to ' + str(t)
 				self.lock_table[var].locking_ts.append(t) # assign shared lock to t
@@ -75,7 +78,7 @@ class LockManager(object):
 		# pending transaction(s) requests exclusive lock				
 		else:
 			self.lock_table[var].lock = 'w' # apply exclusive lock to var
-			q_entry = q.pop( )# pop t from queue
+			q_entry = q.pop(0)# pop t from queue
 			t = q_entry.transaction
 			print 'assigning exclusive lock on ' + var + ' to ' + str(t)			
 			self.lock_table[var].locking_ts = [t] # assign exclusive lock to t	
@@ -114,6 +117,7 @@ class LockManager(object):
 		Release all the locks at this site
 		held by t.
 		"""
+		self.print_lock_table( )		
 		for var in self.transaction_locks[t]:
 			print "releasing a lock on " + var
 			if t in self.lock_table[var].locking_ts:
@@ -123,7 +127,6 @@ class LockManager(object):
 			if len(self.lock_table[var].locking_ts)==0:
 				self.lock_table[var].lock = 'n'
 				self.update_queue(var)
-
 
 	def request_lock(self,t,vid,r_type,value):
 		"""
