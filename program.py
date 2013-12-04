@@ -30,10 +30,3 @@ while line:
 			globalz.tm.process_instruction(instruction.strip())
 	
 	line = sys.stdin.readline() # repeat
-
-# in case there are still pending instructions
-# continue incrementing clock and attempting them
-while globalz.tm.has_active_transactions( ):
-	globalz.clock += 1
-	for site in globalz.sites:
-		site.dm.try_pending( )

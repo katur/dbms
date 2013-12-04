@@ -22,28 +22,6 @@ class TransactionManager(object):
 		self.transactions = {}
 
 
-	def num_active_transactions(self):
-		count = 0
-		for transaction in self.transactions.values():
-			if transaction.status == "active":
-				count += 1
-		return count
-
-
-	def has_active_transactions(self):
-		"""
-		returns Boolean of whether there are any 
-			active transactions.
-		used by program.py to cycle through pending
-			instructions at end of program,
-			in case we are given any "partial" transactions.
-		"""
-		for transaction in self.transactions.values( ):
-			if transaction.status == "active":
-				return True
-		return False	
-
-
 	def locate_read_site(self,t,vid):
 		"""
 		Locate next active site with applicable read

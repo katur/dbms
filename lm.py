@@ -55,29 +55,7 @@ class LockManager(object):
 		for vid in self.lock_table.keys( ):
 			self.lock_table[vid] = LockTableEntry(vid)
 
-	"""
-	def update_queue(self,vid):
-		lt_entry = self.lock_table[vid]
-		if lt_entry.lock == 'n' and len(lt_entry.q) > 0:
-			updates = {'lock_type':None, 'ts':[]}
-			
-			# pending transaction(s) requests shared lock
-			while lt_entry.q[0].r_type == 'r':
-				updates['lock_type'] = 'r'
-				q_entry = lt_entry.q.pop( )
-				updates['ts'].append(q_entry.transaction)				
-			
-			# pending transaction requests exclusive lock
-			if lt_entry.lock == 'n':
-				updates['lock_type'] = 'w'
-				q_entry = lt_entry.q.pop( )
-				updates['ts'] = [q_entry.transaction]
-				updates['write_value'] = q_entry.value
-			return updates
-		else:
-			return None
-	"""
-	
+
 	def update_queue(self,var):
 		q = self.lock_table[var].q
 		if len(q) == 0:
