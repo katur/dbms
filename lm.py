@@ -62,7 +62,7 @@ class LockManager(object):
 		# pending transaction(s) requests shared lock
 		if q[0].r_type == 'r':
 			self.lock_table[var].lock = 'r' # apply shared lock to var
-			while q[0].r_type == 'r':				
+			while len(q) > 0 and q[0].r_type == 'r':				
 				q_entry = q.pop( ) # pop t from queue
 				t = q_entry.transaction
 				print 'assigning shared lock on ' + var + ' to ' + str(t)
@@ -114,7 +114,10 @@ class LockManager(object):
 		"""
 		for var in self.transaction_locks[t]:
 			print "releasing a lock on " + var
-			self.lock_table[var].locking_ts.remove(t)
+			if t in self.lock_table[var].locking_ts:
+				self.lock_table[var].locking_ts.remove(t)
+			else:
+				print str(t) + " did not hold a lock on " + var
 			if len(self.lock_table[var].locking_ts)==0:
 				self.lock_table[var].lock = 'n'
 				self.update_queue(var)
