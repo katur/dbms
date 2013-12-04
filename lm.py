@@ -103,7 +103,7 @@ class LockManager(object):
 		
 		"""	
 		for var in self.transaction_locks[t]:
-			 print "\t" str(t) + " releasing a lock on " + var
+			 print "\t" + str(t) + " releasing a lock on " + var
 			if t in self.lock_table[var].locking_ts:
 				self.lock_table[var].locking_ts.remove(t)
 			#else:
