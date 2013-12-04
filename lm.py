@@ -108,7 +108,7 @@ class LockManager(object):
 		for q_entry in lt_entry.q:
 			if((r_type=='w' or q_entry.r_type=='w') and q_entry.transaction.start_time < t.start_time):
 				return False
-		lt_entry.q.insert(0,QueueEntry(t,r_type,val))
+		lt_entry.q.append(QueueEntry(t,r_type,val))
 		return True		
 
 
@@ -116,8 +116,7 @@ class LockManager(object):
 		"""
 		Release all the locks at this site
 		held by t.
-		"""
-		self.print_lock_table( )		
+		"""	
 		for var in self.transaction_locks[t]:
 			print "releasing a lock on " + var
 			if t in self.lock_table[var].locking_ts:
