@@ -269,31 +269,8 @@ class TransactionManager(object):
 					site.dm.lm.reset_lock_table()
 					print "Site " + a + " failed"
 					
-					# ~~~~~~~~~~~~~~~~~~~~~~~~
-					# here, need to remove the site
-					# from transactions with in-progress
-					# read or write at the site,
-					# possibly setting to no longer in
-					# progress / to be started over
-					# at clock tick, or for replicated writes,
-					# seeing if the site list is empty
-					# ~~~~~~~~~~~~~~~~~~~~~~~~
-					'''
-					for t in self.transactions.values():
-						all_granted = True
-						none_granted = True					
-						for site_entry in t.sites_in_progress:
-							if site_entry[0] == site:	
-								site_entry[1] = False
-							if site_entry[1]:
-								none_granted = False
-							else:
-								all_granted = False
-						if all_granted:
-							t.reset_buffer( )
-						elif none_granted:
-							t.instruction_in_progress = False
-					'''
+					# update any transactions with in-progress reads/writes
+					#		on this site in repsonse to the failure
 					for t in self.transactions.values():
 						# if a pending instruction
 						if t.instruction_buffer and t.instruction_in_progress:
@@ -301,15 +278,27 @@ class TransactionManager(object):
 							
 							# if read
 							if re.match("^R\(.+\,.+\)", i):
+								
+								# site length should always be 1
 								if len(t.sites_in_progress) != 1:
 									print "warning: a read with " + \
 										"sites_in_progress not len 1"
+
+								# if this site present in sites_in_progress,
+								#		simply mark it to restart on next clock tick
 								for site_entry in t.sites_in_progress:
 									if site_entry[0] == site:
 										t.add_unstarted_instruction_to_buffer(i)	
 							
 							# if write
 							elif re.match("^W\(.+\,.+\,.+\)", i):
+								
+								# iterate through all sites, keeping track
+								#		of how many have been written to already,
+								#		and also removing any matching this site
+								#		if they haven't been written to
+								#	NOTE: if they have been written to,
+								#		the transaction will abort at commit time due to avail copies
 								num_written = 0
 								for site_entry in t.sites_in_progress:
 									if site_entry[1] == True:
@@ -325,8 +314,6 @@ class TransactionManager(object):
 								# if list is now filled with written values
 								if len(t.sites_in_progress) == num_written:
 									t.reset_buffer()
-
-
 								
 
 		###################
