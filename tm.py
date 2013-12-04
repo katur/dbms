@@ -300,7 +300,7 @@ class TransactionManager(object):
 					# at clock tick, or for replicated writes,
 					# seeing if the site list is empty
 					# ~~~~~~~~~~~~~~~~~~~~~~~~
-					for t in self.transactions:
+					for t in self.transactions.values():
 						all_granted = True
 						none_granted = True					
 						for site_entry in t.sites_in_progress:
@@ -334,7 +334,7 @@ class TransactionManager(object):
 					# here, have to add the recovered,
 					# pending site to replicated, in-progress writes
 					#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-					for t in self.transactions:
+					for t in self.transactions.values():
 						if t.instruction_buffer and t.instruction_buffer[0] == 'W':
 							args = re.search("\((?P<args>.*)\)", t.instruction_buffer)
 							if args:
