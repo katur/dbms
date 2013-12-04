@@ -1,0 +1,16 @@
+// exclusive should wait on shared if all shared are younger,
+// but should die if any shared is older
+
+begin(T1)
+begin(T2)
+W(T2,x1,444)
+W(T1,x1,555)
+end(T2)
+end(T1)
+
+begin(T3)
+begin(T4)
+W(T3,x1,666)
+W(T4,x1,777)
+end(T3)
+end(T4)
