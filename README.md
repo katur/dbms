@@ -15,12 +15,12 @@ python program.py < input.txt
 ```
 
 
-## Design Document
-### high-level overview of organization
+## Design Document 
+#### (high-level overview of organization)
 
 
-## Updated Project Specification
-### listing all functions and data members of the various modules/classes
+## Updated Project Specification 
+####(listing functions and data members of modules/classes)
 
 #### Main program
 - call initialize() function to initialize the data in the sites, create the TM's variable directory, and create lock objects for each var at each site, per the spec.
@@ -151,16 +151,23 @@ python program.py < input.txt
 #### Lock Manager object
 - lock_table: dictionary keyed on var present at the site, value a lock table entry
 - transaction_locks: dictionary keyed on transactions holding locks at this site, value a list of the vars the transaction has locks on at this site.
-- reset_lock_table(self)
-- update_queue(self,var)
-- enqueue_transaction(self,t,vid,r_type,val)
-- release_locks(self,t)
 - request_lock(self,t,vid,r_type,value)
+	* process a transactions's lock request, implementing wait-die if applicable, and calling enqueue if there is a queue
 - request_read_lock(self,t,vid)
+	* handles read-specific details for request_lock
 - request_write_lock(self,t,vid,value)
+	* handles write-specific details for request_lock
+- enqueue_transaction(self,t,vid,r_type,val)
+	* add new transaction to queue
+- update_queue(self,var)
+	* cycles through lock queues for variable var, popping transactions and granting locks where available
+- release_locks(self,t)
+	* release all locks held by this transaction (at transaction's abort and commit time)
+- reset_lock_table(self)
+	* reset lock table (to use after site failure)
 
 #### Lock Table Entry object
-- var: the var this lock is on
+- vid: the variable id this lock is on
 - lock: 'w' for exclusive, 'r' for shared, 'n' for not locked right now
 - locking_ts: list of transcations currently holding the lock on this var
 - q: queue of QueueEntry objects, i.e., transactions waiting on this lock along with some information regarding the lock request
