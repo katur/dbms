@@ -24,8 +24,19 @@ class LockManager(object):
 		for vid in self.lock_table.keys( ):
 			self.lock_table[vid] = LockTableEntry(vid)
 
-
+	# checks lock queue for variable @var, popping transactions and 
+	# granting them locks if available.
 	def update_queue(self,var):
+		"""
+		@var: variable whose lock queue to be updated
+		
+		side effects: Transactions waiting at the head of the queue
+					  will be granted locks if possible. When this 
+					  happens, the requested read/write will be 
+					  performed immediately. Finally the transaction's
+					  instruction buffer will be reset if the new lock
+					  was the last one it was waiting for. 					
+		"""
 		q = self.lock_table[var].q
 		if len(q) == 0:
 			return	
@@ -66,7 +77,6 @@ class LockManager(object):
 		Otherwise, enqueues transaction
 		and returns True.
 		"""
-		
 		if r_type == 'w' or self.lock_table[vid].lock == 'w':
 			for t2 in self.lock_table[vid].locking_ts:
 				if t2.start_time < t.start_time:
